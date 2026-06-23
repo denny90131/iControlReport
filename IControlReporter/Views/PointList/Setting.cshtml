@@ -1,0 +1,348 @@
+<style>
+    html, body {
+        background-color: #E8D8FA !important;
+    }
+    /* 基於 #E8D8FA 延伸的主題色系 */
+    .theme-text {
+        color: #6C4AB6 !important; /* 較深的紫色用於標題與圖示，提升對比度 */
+    }
+    .theme-btn {
+        background-color: #8D72E1 !important; /* 主題紫按鈕 */
+        color: white !important;
+        transition: all 0.2s ease-in-out;
+    }
+    .theme-btn:hover {
+        background-color: #6C4AB6 !important; /* 滑鼠懸停加深 */
+        transform: translateY(-2px);
+    }
+    .theme-btn-outline {
+        color: #6C4AB6 !important;
+        border: 1px solid #8D72E1 !important;
+        background-color: transparent !important;
+        transition: all 0.2s ease-in-out;
+    }
+    .theme-btn-outline:hover {
+        background-color: #8D72E1 !important;
+        color: white !important;
+    }
+    .card {
+        background-color: #E8E1FA !important; /* 較深的紫色用於標題與圖示，提升對比度 */
+        border-radius: 30px;
+    }
+
+    /* 自訂輸入框樣式 */
+    .form-control {
+        background-color: rgba(255, 255, 255, 0.6) !important; /* 半透明白 */
+        color: #513c8c !important;                             /* 輸入文字改用深紫色 */
+        border: 1px solid rgba(141, 114, 225, 0.3) !important;  
+        border-radius: 10px !important;                         
+        transition: all 0.2s ease-in-out !important;
+    }
+
+    /* 當滑鼠移上去 (Hover) 的效果 */
+    .form-control:hover {
+        background-color: rgba(255, 255, 255, 0.8) !important;
+        border-color: rgba(141, 114, 225, 0.6) !important;
+    }
+
+    /* 當點擊輸入框/選單 (Focus) 時的效果 */
+    .form-control:focus {
+        background-color: #ffffff !important;                   /* 聚焦時變回純白 */
+        color: #4A148C !important;
+        border-color: #8D72E1 !important;                       
+        box-shadow: 0 0 0 0.25rem rgba(141, 114, 225, 0.25) !important; 
+    }
+
+    /* 表格樣式微調 */
+    .table-hover tbody tr:hover {
+        background-color: rgba(141, 114, 225, 0.1);
+    }
+    .table th {
+        color: #6C4AB6;
+        font-weight: 600;
+        border-bottom-color: rgba(141, 114, 225, 0.3);
+    }
+    .table td {
+        vertical-align: middle;
+        border-bottom-color: rgba(141, 114, 225, 0.1);
+    }
+</style>
+
+<div class="container-fluid py-3">
+    <!-- 選擇與加入 Tag 的操作區塊 -->
+    <div class="card shadow-sm mb-4 border-0 rounded-3">
+        <div class="card-body d-flex flex-column gap-3">
+            <h5 class="card-title mb-0 theme-text"><i class="bi bi-collection-fill me-2"></i>Tag Pool Management</h5>
+            
+            <div class="row g-3 align-items-end">
+                <!-- 新增 Tag 到清單 -->
+                <div class="col-12 d-flex gap-2 align-items-center">
+                    <label for="pointSelect" class="form-label text-secondary fw-bold mb-0 text-nowrap">Add Tag:</label>
+                    <select id="pointSelect" class="form-select">
+                        <option value="">-- Choose a Tag --</option>
+                        @if (ViewBag.Points != null)
+                        {
+                            foreach (var item in ViewBag.Points)
+                            {
+                                <option value="@item.PointId">@item.PointName</option>
+                            }
+                        }
+                    </select>
+                    <button class="btn theme-btn text-nowrap" id="addTagToPoolBtn">
+                        <i class="bi bi-plus-lg me-1"></i> Add
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 目前已加入 Pool 的 Tag 列表 -->
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="poolTable">
+                    <thead class="table-light text-secondary">
+                        <tr>
+                            <th scope="col" width="5%">#</th>
+                            <th scope="col" width="15%">Tag ID</th>
+                            <th scope="col" width="20%">Tag Name</th>
+                            <th scope="col" width="25%">Name <span class="text-danger">*</span></th>
+                            <th scope="col" width="25%">Description <span class="text-danger">*</span></th>
+                            <th scope="col" width="10%" class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- JavaScript 將動態渲染被加入的 Tag -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 存儲按鈕 -->
+            <div class="text-end mt-3">
+                <button class="btn theme-btn px-4" id="savePoolBtn">
+                    <i class="bi bi-save me-1"></i> Save Tag Pool
+                </button>
+            </div>
+
+            <!-- 報表生成需求說明區塊 -->
+            <div class="alert mt-4 shadow-sm border-0" style="background-color: rgba(141, 114, 225, 0.1); border-left: 5px solid #8D72E1 !important; border-radius: 10px;" role="alert">
+                <div class="d-flex">
+                    <i class="bi bi-info-circle-fill fs-4 me-3 theme-text"></i>
+                    <div>
+                        <h6 class="fw-bold theme-text mb-2">Report Generation Requirements</h6>
+                        <p class="mb-2 text-secondary" style="font-size: 0.95rem;">
+                            The <strong>Name</strong> fields defined in this form act as mapping references for generating Daily and Monthly reports. 
+                            To successfully generate these reports, ensure that your Tag Pool includes the following designated names:
+                        </p>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <span class="badge rounded-pill shadow-sm" style="background-color: white; color: #6C4AB6; border: 1px solid rgba(141, 114, 225, 0.4);">MVCB</span>
+                            <span class="badge rounded-pill shadow-sm" style="background-color: white; color: #6C4AB6; border: 1px solid rgba(141, 114, 225, 0.4);">VCB1</span>
+                            <span class="badge rounded-pill shadow-sm" style="background-color: white; color: #6C4AB6; border: 1px solid rgba(141, 114, 225, 0.4);">VCB2</span>
+                            <span class="badge rounded-pill shadow-sm" style="background-color: white; color: #6C4AB6; border: 1px solid rgba(141, 114, 225, 0.4);">VCB3</span>
+                            <span class="badge rounded-pill shadow-sm" style="background-color: white; color: #6C4AB6; border: 1px solid rgba(141, 114, 225, 0.4);">VCB4</span>
+                            <span class="badge rounded-pill shadow-sm" style="background-color: white; color: #6C4AB6; border: 1px solid rgba(141, 114, 225, 0.4);">VCB5</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function escapeHTML(str) {
+        return str.toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    // 💡 接收從 Controller ViewBag 傳過來的單一 TagPool JSON 資料
+    const savedPoolData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.TagPool.TagPool));
+
+    // 💡 預設直接將檔案資料載入為 tagPoolData
+    let tagPoolData = savedPoolData.map(t => ({
+        Tag_ID: t.Tag_ID,
+        Tag_Name: t.Tag_Name,
+        Name: t.Name || '',
+        Description: t.Description || '',
+        isEditing: false // 預設以檢視模式載入
+    }));
+
+    // 1. 將選取的 Tag 加入陣列並重新渲染表格
+    document.getElementById('addTagToPoolBtn').addEventListener('click', function() {
+        const select = document.getElementById('pointSelect');
+        const tagId = select.value;
+        const tagName = select.options[select.selectedIndex]?.text;
+
+        if (!tagId) {
+            alert('請先選擇一個 Tag！');
+            return;
+        }
+
+        if (tagPoolData.some(t => t.Tag_ID == tagId)) {
+            alert('這個 Tag 已經被加入清單中了！');
+            return;
+        }
+
+        // 將新資料加入陣列 (Name 和 Description 預設空白)
+        tagPoolData.push({
+            Tag_ID: parseInt(tagId),
+            Tag_Name: tagName,
+            Name: '',
+            Description: '',
+            isEditing: true // 💡 新增的項目預設為編輯模式
+        });
+
+        renderPoolTable();
+    });
+
+    // 2. 渲染表格邏輯
+    function renderPoolTable() {
+        const tbody = document.querySelector('#poolTable tbody');
+        tbody.innerHTML = '';
+
+        if (tagPoolData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-secondary py-4">目前尚無 Tag，請從上方選擇並加入。</td></tr>';
+            return;
+        }
+
+        tagPoolData.forEach((tag, index) => {
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-tag-id', tag.Tag_ID);
+
+            let nameCell, descCell, actionCell;
+
+            if (tag.isEditing) {
+                // 編輯模式的 HTML
+                nameCell = `<td><input type="text" class="form-control form-control-sm name-input-edit" value="${escapeHTML(tag.Name)}" placeholder="輸入名稱 (Name)"></td>`;
+                descCell = `<td><input type="text" class="form-control form-control-sm desc-input-edit" value="${escapeHTML(tag.Description)}" placeholder="輸入描述 (Description)"></td>`;
+                actionCell = `
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-success me-1" onclick="saveRowEdit(${tag.Tag_ID})" title="Save"><i class="bi bi-check-lg"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="cancelRowEdit(${tag.Tag_ID})" title="Cancel"><i class="bi bi-x-lg"></i></button>
+                    </td>`;
+            } else {
+                // 檢視模式的 HTML
+                nameCell = `<td>${escapeHTML(tag.Name)}</td>`;
+                descCell = `<td>${escapeHTML(tag.Description)}</td>`;
+                actionCell = `
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary me-1" onclick="editRow(${tag.Tag_ID})" title="Edit"><i class="bi bi-pencil-square"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="removePoolTag(${tag.Tag_ID})" title="Remove"><i class="bi bi-trash"></i></button>
+                    </td>`;
+            }
+
+            tr.innerHTML = `
+                <th scope="row">${index + 1}</th>
+                <td>${tag.Tag_ID}</td>
+                <td class="fw-bold theme-text">${tag.Tag_Name}</td>
+                ${nameCell}
+                ${descCell}
+                ${actionCell}
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ============== Action 函式 ==================
+    // 移除指定的 Tag
+    window.removePoolTag = function(id) {
+        tagPoolData = tagPoolData.filter(t => t.Tag_ID !== id);
+        renderPoolTable();
+    };
+
+    // 單列編輯模式
+    window.editRow = function(id) {
+        const tag = tagPoolData.find(t => t.Tag_ID === id);
+        if (tag) {
+            tag.isEditing = true;
+            renderPoolTable();
+        }
+    };
+
+    // 💡 新增：儲存單列編輯
+    window.saveRowEdit = function(id) {
+        const tag = tagPoolData.find(t => t.Tag_ID === id);
+        const row = document.querySelector(`tr[data-tag-id='${id}']`);
+        if (tag && row) {
+            const nameInput = row.querySelector('.name-input-edit');
+            const descInput = row.querySelector('.desc-input-edit');
+
+            tag.Name = nameInput.value;
+            tag.Description = descInput.value;
+            tag.isEditing = false;
+            renderPoolTable();
+        }
+    };
+
+    // 💡 新增：取消單列編輯
+    window.cancelRowEdit = function(id) {
+        const tag = tagPoolData.find(t => t.Tag_ID === id);
+        if (tag) {
+            tag.isEditing = false;
+            renderPoolTable();
+        }
+    };
+
+
+    // 發送資料
+    // 4. 按下儲存時的驗證與發送
+    document.getElementById('savePoolBtn').addEventListener('click', function() {
+        // 💡 檢查是否有項目仍在編輯中
+        if (tagPoolData.some(t => t.isEditing)) {
+            alert('您有尚未儲存的項目，請先完成該列的儲存或取消！');
+            return;
+        }
+
+        // 驗證：確保每個 Tag 都有填寫 Name 與 Description
+        const isAllFilled = tagPoolData.every(t => t.Name.trim() !== '' && t.Description.trim() !== '');
+        if (!isAllFilled) {
+            alert('請將列表中所有 Tag 的「Name」與「Description」填寫完整！');
+            return;
+        }
+
+        // 組裝出完全符合 ExecuteTagPool 類別的 JSON Payload
+        const payload = {
+            TagPool: tagPoolData
+        };
+
+        console.log("準備傳送給後端的資料:", payload);
+
+        const btn = this;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+        btn.disabled = true;
+
+        // 使用 Fetch 發送到後端 Controller (請確認路由是否正確)
+        fetch('/PointList/SaveTagPool', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if(!response.ok) throw new Error("伺服器回應錯誤");
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert(tagPoolData.length === 0 ? '已成功清空清單並儲存！' : '存儲成功！');
+                
+                // 💡 關鍵：儲存成功後，重新載入當前網頁
+                location.reload(); 
+            } else {
+                alert('儲存失敗：' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Save error:', error);
+            alert('發生錯誤，存儲失敗。');
+        })
+        .finally(() => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        });
+    });
+
+    // 頁面載入時先執行一次渲染，呈現空白狀態
+    renderPoolTable();
+</script>

@@ -1,0 +1,592 @@
+<style>
+    html, body {
+        background-color: #E8D8FA !important;
+    }
+    /* 基於 #E8D8FA 延伸的主題色系 */
+    .theme-text {
+        color: #6C4AB6 !important; /* 較深的紫色用於標題與圖示，提升對比度 */
+    }
+    .theme-btn {
+        background-color: #8D72E1 !important; /* 主題紫按鈕 */
+        color: white !important;
+        transition: all 0.2s ease-in-out;
+    }
+    .theme-btn:hover {
+        background-color: #6C4AB6 !important; /* 滑鼠懸停加深 */
+        transform: translateY(-2px);
+    }
+    .theme-btn-outline {
+        color: #6C4AB6 !important;
+        border: 1px solid #8D72E1 !important;
+        background-color: transparent !important;
+        border-radius: 50rem !important; /* 全圓角 */
+        transition: all 0.2s ease-in-out;
+    }
+    .theme-btn-outline:hover {
+        background-color: #8D72E1 !important;
+        color: white !important;
+    }
+    .card {
+        background-color: #E8E1FA !important; /* 較深的紫色用於標題與圖示，提升對比度 */
+        border-radius: 30px;
+    }
+
+    /* 自訂 下拉選單 與 日期選取器 樣式 */
+    .form-select, .form-control {
+        background-color: rgba(255, 255, 255, 0.6) !important; /* 半透明白 */
+        color: #513c8c !important;                             /* 輸入文字改用深紫色 */
+        border: 1px solid rgba(141, 114, 225, 0.3) !important;  
+        border-radius: 10px !important;                         
+        transition: all 0.2s ease-in-out !important;
+    }
+
+    /* 當滑鼠移上去 (Hover) 的效果 */
+    .form-select:hover, .form-control:hover {
+        background-color: rgba(255, 255, 255, 0.8) !important;
+        border-color: rgba(141, 114, 225, 0.6) !important;
+    }
+
+    /* 當點擊輸入框/選單 (Focus) 時的效果 */
+    .form-select:focus, .form-control:focus {
+        background-color: #ffffff !important;                   /* 聚焦時變回純白 */
+        color: #4A148C !important;
+        border-color: #8D72E1 !important;                       
+        box-shadow: 0 0 0 0.25rem rgba(141, 114, 225, 0.25) !important; 
+    }
+
+    /* 修正 Input Group 與 Choices.js 的相容性，讓選單和按鈕完美貼合 */
+    .input-group > .choices {
+        flex: 1 1 auto;
+        width: 1%;
+        margin-bottom: 0;
+    }
+    .input-group > .choices > .choices__inner {
+        border-top-right-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+    }
+    .input-group > .btn {
+        border-top-right-radius: 10px !important;
+        border-bottom-right-radius: 10px !important;
+        z-index: 2; /* 確保按鈕框線正確顯示在最上層 */
+    }
+
+    /* 強制修改點擊展開選單（Option）時的背景與文字顏色 */
+    .form-select option {
+        background-color: #e3daf5 !important; /* 點開選單時，選項清單改為適合的粉紫色 background */
+        color: #513c8c !important;            /* 選項文字改為深紫色 */
+        font-weight: 500;
+    }
+
+    /* 當滑鼠在選項清單中移動時 */
+    .form-select option:hover,
+    .form-select option:focus,
+    .form-select option:active,
+    .form-select option:checked {
+        background-color: #837f91 !important; 
+        color: white !important;
+    }
+
+    /* 修改日期選取器的行事曆小圖示顏色 */
+    input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+        background-color: rgba(141, 114, 225, 0.2);
+        padding: 4px;
+        border-radius: 5px;
+        cursor: pointer;
+        filter: invert(30%) sepia(50%) saturate(2000%) hue-rotate(250deg) brightness(90%) contrast(90%); 
+    }
+
+    /* ⬇️ 核心優化：客製化 Flatpickr 彈出日曆面板的浪漫紫色調 ⬇️ */
+    .flatpickr-calendar {
+        background: #e3daf5 !important; /* 拒絕黑色與死白！彈出面板採用柔和粉紫 */
+        border: 1px solid #8D72E1 !important;
+        box-shadow: 0 8px 24px rgba(108, 74, 182, 0.15) !important;
+        border-radius: 16px !important;
+        font-family: inherit;
+    }
+    /* 頂部月份月份切換區 */
+    .flatpickr-months, .flatpickr-current-month, .flatpickr-month {
+        color: #6C4AB6 !important;
+        fill: #6C4AB6 !important;
+    }
+    .flatpickr-prev-month:hover svg, .flatpickr-next-month:hover svg {
+        fill: #8D72E1 !important;
+    }
+    /* 星期欄位顏色 */
+    span.flatpickr-weekday {
+        color: #8D72E1 !important;
+        font-weight: bold;
+    }
+    /* 日期數字的顏色與圓角 */
+    .flatpickr-day {
+        color: #513c8c !important;
+        border-radius: 8px !important;
+    }
+    /* 今天日期的外框 */
+    .flatpickr-day.today {
+        border-color: #8D72E1 !important;
+    }
+    /* 滑鼠滑過日期的淡淡紫色反應 */
+    .flatpickr-day:hover, .flatpickr-day:focus {
+        background: rgba(141, 114, 225, 0.25) !important;
+        border-color: transparent !important;
+        color: #4A148C !important;
+    }
+    /* 被選中的日期直接換上主題亮紫色 */
+    .flatpickr-day.selected, .flatpickr-day.selected:hover {
+        background: #8D72E1 !important;
+        color: white !important;
+        border-color: #8D72E1 !important;
+    }
+    /* 下方時間選取器面板 */
+    .flatpickr-time {
+        border-top: 1px solid rgba(141, 114, 225, 0.2) !important;
+        background: rgba(211, 203, 233, 0.7) !important;
+        border-radius: 0 0 16px 16px;
+    }
+    .flatpickr-time input, .flatpickr-time .flatpickr-am-pm {
+        color: #513c8c !important;
+    }
+    .flatpickr-time input:hover, .flatpickr-time .flatpickr-am-pm:hover,
+    .flatpickr-time input:focus, .flatpickr-time .flatpickr-am-pm:focus {
+        background: rgba(255, 255, 255, 0.4) !important;
+    }
+    /* 修正與 Bootstrap 寬度衝突 */
+    .flatpickr-calendar.hasTime .flatpickr-time {
+        height: 40px;
+        line-height: 40px;
+    }
+
+    /* 全域客製化滾輪 (Scrollbar) 樣式 */
+    ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+        background: rgba(141, 114, 225, 0.05);
+        border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #a393eb; 
+        border-radius: 10px;
+        border: 2px solid transparent; 
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #8D72E1; 
+    }
+
+    /* ⬇️ Choices.js 可搜尋下拉選單的客製化樣式 ⬇️ */
+    .choices__inner {
+        background-color: rgba(255, 255, 255, 0.6) !important;
+        color: #513c8c !important;
+        border: 1px solid rgba(141, 114, 225, 0.3) !important;
+        border-radius: 10px !important;
+        transition: all 0.2s ease-in-out !important;
+        padding: 0 0.75rem !important; /* 修正內部間距 */
+        min-height: 38px !important; /* 強制對齊一般 Input 的預設高度 */
+        display: flex;
+        align-items: center; /* 讓內部文字與圖示垂直居中 */
+        font-size: 1rem;
+    }
+    .choices.is-focused .choices__inner {
+        background-color: #ffffff !important;
+        color: #4A148C !important;
+        border-color: #8D72E1 !important;
+        box-shadow: 0 0 0 0.25rem rgba(141, 114, 225, 0.25) !important;
+    }
+    .choices__list--dropdown {
+        background: #e3daf5 !important;
+        border: 1px solid #8D72E1 !important;
+        border-radius: 16px !important;
+        margin-top: 8px !important;
+    }
+    .choices__input {
+        background-color: transparent !important;
+        color: #513c8c !important;
+    }
+    .choices__item--choice {
+        color: #513c8c !important;
+        font-weight: 500;
+        border-radius: 8px;
+    }
+    .choices__item--choice.is-highlighted {
+        background-color: #8D72E1 !important;
+        color: white !important;
+    }
+    .choices[data-type*="select-one"]::after {
+        border-color: #6C4AB6 transparent transparent !important;
+        border-width: 6px;
+        right: 15px;
+        margin-top: -5px;
+    }
+    .choices[data-type*="select-one"].is-open::after {
+        border-color: transparent transparent #6C4AB6 !important;
+        margin-top: -2.5px;
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+<div class="container-fluid py-3">
+    <div class="card shadow-sm mb-4 border-0 rounded-3">
+        <div class="card-body">
+            <h5 class="card-title mb-3 theme-text"><i class="bi bi-funnel-fill me-2"></i>Search Criteria</h5>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="pointSelect" class="form-label fw-bold text-secondary"><i class="bi bi-tag-fill me-2 theme-text"></i>Tag Name</label>
+                    <div class="input-group">
+                        <select id="pointSelect" class="form-select">
+                            <option value="">-- Select Tag --</option>
+                            @if (ViewBag.Points != null)
+                            {
+                                foreach (var item in ViewBag.Points)
+                                {
+                                    <option value="@item.PointId">@item.PointName</option>
+                                }
+                            }
+                        </select>
+                        <button class="btn theme-btn" type="button" id="addTagBtn">
+                            <i class="bi bi-plus-lg"></i> Add
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label for="startTime" class="form-label fw-bold text-secondary"><i class="bi bi-play-circle-fill me-2 theme-text"></i>Start Time</label>
+                    <input type="text" id="startTime" class="form-control" placeholder="Select Start Time" />
+                </div>
+                <div class="col-md-3">
+                    <label for="endTime" class="form-label fw-bold text-secondary"><i class="bi bi-stop-circle-fill me-2 theme-text"></i>End Time</label>
+                    <input type="text" id="endTime" class="form-control" placeholder="Select End Time" />
+                </div>
+                <div class="col-md-3">
+                    <button id="searchBtn" class="btn theme-btn w-100">
+                        <i class="bi bi-search me-2"></i>Search
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 已選擇的 Tag 顯示區塊 -->
+            <div class="mt-3 d-flex justify-content-between align-items-start w-100">
+                <div id="selectedTagsContainer" class="d-flex flex-wrap gap-2"></div>
+                <!-- 儲存 Tag 群組按鈕 (預設隱藏，有選取時才顯示) -->
+                <button type="button" id="saveTagPoolBtn" class="btn theme-btn-outline btn-sm text-nowrap ms-3" style="display: none;">
+                    <i class="bi bi-save me-1"></i> Save Tags
+                </button>
+            </div>
+
+            <div class="mt-4 d-flex flex-wrap gap-2 align-items-center">
+                <span class="text-secondary fw-bold me-2"><i class="bi bi-clock-history me-1 theme-text"></i>Quick Select:</span>
+                <button type="button" class="btn theme-btn-outline btn-sm px-3 py-1" onclick="setQuickRange('3d')">
+                    <i class="bi bi-calendar-event me-1"></i>Last 3 Days
+                </button>
+                <button type="button" class="btn theme-btn-outline btn-sm px-3 py-1" onclick="setQuickRange('1w')">
+                    <i class="bi bi-calendar-week me-1"></i>Last 1 Week
+                </button>
+                <button type="button" class="btn theme-btn-outline btn-sm px-3 py-1" onclick="setQuickRange('1m')">
+                    <i class="bi bi-calendar-month me-1"></i>Last 1 Month
+                </button>
+                <button type="button" class="btn theme-btn-outline btn-sm px-3 py-1" onclick="setQuickRange('3m')">
+                    <i class="bi bi-calendar3 me-1"></i>Last 3 Months
+                </button>
+                <button type="button" class="btn theme-btn-outline btn-sm px-3 py-1" onclick="setQuickRange('1y')">
+                    <i class="bi bi-calendar4-week me-1"></i>Last 1 Year
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body">
+            <h5 class="card-title theme-text"><i class="bi bi-graph-up-arrow me-2"></i>Trend Chart</h5>
+            <div class="position-relative w-100 mt-3" style="height: 500px;">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    let chartInstance = null;
+    let startPicker, endPicker;
+    let choicesInstance = null; // Choices.js instance
+    let selectedTags = []; // 用來存放已新增的 Tag 清單
+
+    // ⬇️ 初始化元件 ⬇️
+    document.addEventListener("DOMContentLoaded", function() {
+        const config = {
+            enableTime: true,
+            time_24hr: true,
+            dateFormat: "Y-m-d H:i",
+            minuteIncrement: 1
+        };
+        startPicker = flatpickr("#startTime", config);
+        endPicker = flatpickr("#endTime", config);
+
+        // Choices.js
+        choicesInstance = new Choices('#pointSelect', {
+            searchEnabled: true,
+            itemSelectText: 'Press to select',
+            placeholder: true,
+            removeItemButton: false,
+        });
+    });
+
+    @* 按下新增 Tag 按鈕 *@
+    document.getElementById('addTagBtn').addEventListener('click', function() {
+        var selectElement = document.getElementById('pointSelect');
+        var selectedId = selectElement.value;
+        var selectedName = selectElement.options[selectElement.selectedIndex].text;
+
+        if (!selectedId) {
+            alert('Please select a Tag to add!');
+            return;
+        }
+
+        // 檢查是否已經加過了
+        if (selectedTags.some(t => t.id === selectedId)) {
+            alert('This Tag has already been added!');
+            return;
+        }
+
+        selectedTags.push({ id: selectedId, name: selectedName });
+        renderSelectedTags();
+    });
+
+    @* 渲染畫面上已選取的 Tag 標籤 *@
+    function renderSelectedTags() {
+        const container = document.getElementById('selectedTagsContainer');
+        container.innerHTML = '';
+        selectedTags.forEach(tag => {
+            const badge = document.createElement('span');
+            badge.className = 'badge rounded-pill d-flex align-items-center px-3 py-2 fs-6 shadow-sm';
+            badge.style.backgroundColor = '#8D72E1';
+            badge.style.color = 'white';
+            badge.innerHTML = `
+                <i class="bi bi-tag me-2"></i> ${tag.name}
+                <i class="bi bi-x-circle ms-2" style="cursor:pointer;" onclick="removeTag('${tag.id}')" title="Remove"></i>
+            `;
+            container.appendChild(badge);
+        });
+        
+        // 控制儲存按鈕的顯示/隱藏
+        const saveBtn = document.getElementById('saveTagPoolBtn');
+        if (saveBtn) {
+            saveBtn.style.display = selectedTags.length > 0 ? 'inline-block' : 'none';
+        }
+    }
+
+    @* 移除某個選取的 Tag *@
+    window.removeTag = function(id) {
+        selectedTags = selectedTags.filter(t => t.id !== id);
+        renderSelectedTags();
+    };
+
+    @* 按下按鈕 *@
+    document.getElementById('searchBtn').addEventListener('click', function() {
+        var startTime = document.getElementById('startTime').value;
+        var endTime = document.getElementById('endTime').value;
+
+        @* 提示字 *@
+        if (selectedTags.length === 0) {
+            alert('Please add at least one Tag!');
+            return;
+        }
+        if (!startTime || !endTime) {
+            alert('Please select valid start and end times!');
+            return;
+        }
+        if (new Date(startTime) >= new Date(endTime)) {
+            alert('End time must be greater than start time!');
+            return;
+        }
+
+        console.log("Search Criteria - Tags:", selectedTags, "Start:", startTime, "End:", endTime);
+
+        // 1. 準備要傳送給 Controller 的資料 (Payload)
+        const requestPayload = {
+            TagIds: selectedTags.map(t => t.id), // 萃取出所有選擇的 Tag ID 變成陣列
+            StartTime: startTime,
+            EndTime: endTime
+        };
+
+        // 讓按鈕呈現 Loading 狀態 (提升使用者體驗)
+        const searchBtnElement = document.getElementById('searchBtn');
+        const originalBtnText = searchBtnElement.innerHTML;
+        searchBtnElement.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...';
+        searchBtnElement.disabled = true;
+
+        // 2. 發送 POST 請求到 ChartController 的 GetChartData Action
+        fetch('/Chart/GetChartData', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json' // 宣告我們傳送的是 JSON
+            },
+            body: JSON.stringify(requestPayload)
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('伺服器回應錯誤');
+            return response.json(); // 解析 Controller 回傳的 JSON
+        })
+        .then(data => {
+           console.log("從後端接收到的真實資料:", data);
+            
+            if (data.success && data.datasets.length > 0) {
+                // ⭕️ 關鍵改動：成功取得後端資料，呼叫真實渲染函式
+                renderRealChart(data);
+            } else {
+                alert('該時間區間內查無任何數據！');
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            alert('無法取得圖表資料，請確認伺服器連線或稍後再試。');
+        })
+        .finally(() => {
+            // 3. 無論成功或失敗，最後都將按鈕恢復原狀
+            searchBtnElement.innerHTML = originalBtnText;
+            searchBtnElement.disabled = false;
+        });
+    });
+
+    @* 日期快捷 *@
+    function setQuickRange(range) {
+        const end = new Date();
+        let start = new Date();
+
+        switch(range) {
+            case '3d': start.setDate(end.getDate() - 3); break;
+            case '1w': start.setDate(end.getDate() - 7); break;
+            case '1m': start.setMonth(end.getMonth() - 1); break;
+            case '3m': start.setMonth(end.getMonth() - 3); break;
+            case '1y': start.setFullYear(end.getFullYear() - 1); break;
+        }
+
+        const formatDateTime = (date) => {
+            const pad = (n) => n.toString().padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        };
+
+        // 同步更新 Flatpickr 內部儲存的值
+        if(startPicker && endPicker) {
+            startPicker.setDate(start);
+            endPicker.setDate(end);
+        } else {
+            document.getElementById('endTime').value = formatDateTime(end);
+            document.getElementById('startTime').value = formatDateTime(start);
+        }
+    }
+
+    @* 儲存 Tag 群組 *@
+    document.getElementById('saveTagPoolBtn').addEventListener('click', function() {
+        if (selectedTags.length === 0) {
+            alert('請至少選擇一個 Tag！');
+            return;
+        }
+
+        // 1. 詢問使用者要命名的群組名稱
+        const groupName = prompt('請輸入此 Tag 群組的名稱 (方便下次查詢):', 'My Favorites');
+        if (!groupName) return; // 使用者按取消
+
+        // 2. 依照 ExecuteTagPool.cs 的類別結構整理 Payload
+        const payload = {
+            TagPool: selectedTags.map(t => ({
+                Name: groupName,
+                Tag_ID: parseInt(t.id), // 轉成 int 型態以符合後端 Model
+                Tag_Name: t.name
+            }))
+        };
+
+        const btnElement = this;
+        const originalText = btnElement.innerHTML;
+        btnElement.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+        btnElement.disabled = true;
+
+        // 3. 發送 POST 請求至後端
+        fetch('/Chart/SaveTagPool', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) alert('儲存成功！');
+            else alert('儲存失敗：' + data.message);
+        })
+        .catch(error => {
+            console.error('Save error:', error);
+            alert('伺服器連線發生錯誤。');
+        })
+        .finally(() => {
+            btnElement.innerHTML = originalText;
+            btnElement.disabled = false;
+        });
+    });
+
+    @* 生成曲線 *@
+    function renderRealChart(backendData) {
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        
+        // 如果舊的圖表個體存在，先銷毀它，避免畫布重疊與殘影
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        // 紫色系主題線條顏色輪替
+        const themeColors = ['#8D72E1', '#6C4AB6', '#E4AEC5', '#a393eb', '#513c8c'];
+
+        // 將後端傳回的 datasets 加工加上 Chart.js 樣式設定
+        const formattedDatasets = backendData.datasets.map((dataset, index) => {
+            const color = themeColors[index % themeColors.length];
+            return {
+                label: dataset.label,
+                data: dataset.data,       // 真實的數值陣列 [23.5, 24.1, null, 25.0]
+                borderColor: color,
+                backgroundColor: color + '22', // 加上淡淡的透明背景
+                borderWidth: 2,
+                tension: 0.2,             // 曲線平滑度 (0為折線)
+                pointRadius: 3,           // 數據點的點點大小
+                pointHoverRadius: 6,
+                spanGaps: true            // 💡 關鍵：若中間有時間點沒資料 (null)，連線會自動連過去，不會斷掉
+            };
+        });
+
+        // 建立新圖表
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: backendData.labels, // 後端回傳的 X 軸時間陣列
+                datasets: formattedDatasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',         // 滑鼠移上去時，同時顯示該時間點所有線的數值
+                    intersect: false
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false // 隱藏縱向格線，畫面更乾淨
+                        },
+                        ticks: {
+                            maxRotation: 45, // 當時間很密時，自動旋轉 45 度避免重疊
+                            autoSkip: true,  // 自動省略過密的標籤
+                            maxTicksLimit: 20
+                        }
+                    },
+                    y: {
+                        beginAtZero: false, // 歷史趨勢圖通常不強求從 0 開始，看波動更明顯
+                        grid: {
+                            color: 'rgba(141, 114, 225, 0.1)' // 微弱的紫色橫向格線
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>

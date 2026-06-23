@@ -1,0 +1,453 @@
+@{
+    ViewData["Title"] = "Parameter Settings";
+}
+
+<style>
+    html, body {
+        background-color: #E8D8FA !important;
+    }
+    .theme-text {
+        color: #6C4AB6 !important; 
+    }
+    .theme-btn {
+        background-color: #8D72E1 !important; 
+        color: white !important;
+        transition: all 0.2s ease-in-out;
+    }
+    .theme-btn:hover {
+        background-color: #6C4AB6 !important; 
+        transform: translateY(-2px);
+    }
+    .card {
+        background-color: #E8E1FA !important; 
+        border-radius: 30px;
+    }
+    .form-control, .form-select {
+        background-color: rgba(255, 255, 255, 0.6) !important;
+        color: #513c8c !important;                                                     
+        border: 1px solid rgba(141, 114, 225, 0.3) !important;  
+        border-radius: 10px !important;                                                 
+        transition: all 0.2s ease-in-out !important;
+    }
+    .form-control:focus, .form-select:focus {
+        background-color: #ffffff !important;                                           
+        color: #4A148C !important;
+        border-color: #8D72E1 !important;                                               
+        box-shadow: 0 0 0 0.25rem rgba(141, 114, 225, 0.25) !important; 
+    }
+
+    .choices[data-type*="select-multiple"] .choices__inner {
+        background-color: rgba(255, 255, 255, 0.6) !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(141, 114, 225, 0.3) !important;
+        min-height: 45px;
+        padding-bottom: 0px !important;
+    }
+    .choices.is-focused .choices__inner {
+        background-color: #ffffff !important;
+        border-color: #8D72E1 !important;
+        box-shadow: 0 0 0 0.25rem rgba(141, 114, 225, 0.25) !important;
+    }
+    .choices__list--multiple .choices__item {
+        background-color: #8D72E1 !important; 
+        border: 1px solid #6C4AB6 !important;
+        border-radius: 8px !important;
+        font-weight: 500;
+        color: white;
+    }
+    .choices__list--dropdown {
+        background: #e3daf5 !important;
+        border: 1px solid #8D72E1 !important;
+        border-radius: 16px !important;
+        margin-top: 5px !important;
+        z-index: 1050 !important;
+    }
+    .choices__item--choice {
+        color: #513c8c !important;
+        font-weight: 500;
+        border-radius: 8px;
+    }
+    .choices__item--choice.is-highlighted {
+        background-color: #8D72E1 !important;
+        color: white !important;
+    }
+    .form-switch .form-check-input:checked {
+        background-color: #8D72E1;
+        border-color: #8D72E1;
+    }
+</style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+
+<div class="container-fluid py-3">
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-4 theme-text">
+                <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>Report Parameter Settings
+            </h5>
+
+            <div class="row g-4">
+                <div class="col-md-5">
+                    <div class="p-4 bg-white rounded-3 shadow-sm h-100" style="border: 1px solid rgba(141, 114, 225, 0.2);">
+                        <h6 class="fw-bold theme-text mb-3"><i class="bi bi-gear-wide-connected me-2"></i>General Config</h6>
+                        
+                        <label class="form-label fw-bold text-secondary mb-1">Report Type</label>
+                        <select class="form-select mb-3" id="reportTypeSelect">
+                            <option value="daily">Daily Report (日報表)</option>
+                            <option value="monthly">Monthly Report (月報表)</option>
+                        </select>
+
+                        <label class="form-label fw-bold text-secondary mb-1">Report Title</label>
+                        <input type="text" class="form-control mb-3" id="reportTitleInput" placeholder="e.g., Main Substation Report" />
+                        
+                        <label class="form-label fw-bold text-secondary mb-1">Storage Path (儲存路徑)</label>
+                        <input type="text" class="form-control" id="storagePathInput" placeholder="e.g., D:\EMS_Reports\Daily\" />
+                        <span class="text-muted d-block mb-3" style="font-size: 11px;"><i class="bi bi-info-circle me-1"></i> 留空則使用伺服器預設路徑</span>
+
+                        <div class="row mt-3">
+                            <div class="col-6">
+                                <div id="dailyScheduleContainer">
+                                    <label class="form-label fw-bold text-secondary mb-1">Execution Time</label>
+                                    <input type="time" class="form-control" id="executionTimeDaily" value="08:00" />
+                                </div>
+                                <div id="monthlyScheduleContainer" style="display: none;">
+                                    <label class="form-label fw-bold text-secondary mb-1">Execution Day</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="executionTimeMonthly" min="1" max="31" value="1" />
+                                        <span class="input-group-text bg-white text-secondary">th</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 d-flex flex-column">
+                                <label class="form-label fw-bold text-secondary mb-1">Status</label>
+                                <div class="form-check form-switch mt-2">
+                                    <input class="form-check-input fs-5 shadow-sm" type="checkbox" role="switch" id="isEnabledCheck" checked>
+                                    <label class="form-check-label ms-2 pt-1 fw-medium text-secondary" for="isEnabledCheck">Enabled</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-7">
+                    <div class="p-4 bg-white rounded-3 shadow-sm h-100" style="border: 1px solid rgba(141, 114, 225, 0.2);">
+                        <h6 class="fw-bold theme-text mb-3"><i class="bi bi-tags-fill me-2"></i>Data Points Mapping</h6>
+                        
+                        <label class="form-label fw-bold text-secondary mb-1">Select Targets from Tag Pool</label>
+                        <p class="text-muted small mb-2">Choose the mapped 'Name's that should be included as columns in this report.</p>
+                        
+                        <select id="tagPoolNameSelect" multiple></select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top" style="border-color: rgba(141, 114, 225, 0.2) !important;">
+                <div class="text-secondary small">
+                    <i class="bi bi-info-circle me-1"></i> Ensure your Tag Pool is updated before configuring parameters.
+                </div>
+                <button class="btn theme-btn px-5 py-2 fw-bold" id="saveParamsBtn">
+                    <i class="bi bi-save me-2"></i> Save Report Parameters
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-3 mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-4 theme-text">
+                <i class="bi bi-card-list me-2"></i>Saved Configurations
+            </h5>
+            <div class="row g-3" id="savedParamsContainer"></div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<script>
+    let poolRawData = [];
+    let savedReportsData = [];
+    let inlineChoicesInstances = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. 載入 TagPool
+        poolRawData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.TagPool?.TagPool ?? new object[] {}));
+        
+        // 2. 初始化第一個多選框
+        const tagSelectElement = document.getElementById('tagPoolNameSelect');
+        const choices = new Choices(tagSelectElement, {
+            removeItemButton: true,
+            searchEnabled: true,
+            placeholder: true,
+            placeholderValue: "Click to select data points...",
+            itemSelectText: 'Press to select'
+        });
+
+        const options = poolRawData
+            .filter(tag => tag.Name && tag.Name.trim() !== '')
+            .map(tag => ({
+                value: tag.Name,
+                label: tag.Description ? `${tag.Name} (${tag.Description})` : tag.Name
+            }));
+            
+        if (options.length > 0) {
+            choices.setChoices(options, 'value', 'label', true);
+        } else {
+            choices.setChoices([{ value: '', label: 'No tags found in Tag Pool.', disabled: true }], 'value', 'label', true);
+        }
+
+        // --- 切換報表顯示時間軸 ---
+        document.getElementById('reportTypeSelect').addEventListener('change', function() {
+            const isDaily = this.value === 'daily';
+            document.getElementById('dailyScheduleContainer').style.display = isDaily ? 'block' : 'none';
+            document.getElementById('monthlyScheduleContainer').style.display = isDaily ? 'none' : 'block';
+        });
+
+        // --- 5. 讀取並渲染已儲存的報表 ---
+        savedReportsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ReportParams ?? new List<IControlReporter.Models.Report.ReportParameterModel>()));
+        savedReportsData.forEach(r => r.isEditing = false); 
+        window.renderSavedReports();
+
+        // --- 6. 頂部主儲存按報表排程 ---
+        document.getElementById('saveParamsBtn').addEventListener('click', function() {
+            const reportType = document.getElementById('reportTypeSelect').value;
+            const reportTitle = document.getElementById('reportTitleInput').value;
+            const storagePath = document.getElementById('storagePathInput').value.trim(); // 💡 抓取儲存路徑
+            
+            if (!reportTitle.trim()) {
+                alert('Please enter a Report Title!');
+                return;
+            }
+
+            const selectedNames = choices.getValue(true);
+            if (selectedNames.length === 0) {
+                alert('Please select at least one Data Point!');
+                return;
+            }
+            
+            let execTime = '';
+            if (reportType === 'daily') {
+                execTime = document.getElementById('executionTimeDaily').value;
+                if (!execTime) { alert('Please select an Execution Time!'); return; }
+            } else {
+                execTime = document.getElementById('executionTimeMonthly').value;
+                if (!execTime || execTime < 1 || execTime > 31) { alert('Please enter a valid day (1-31)!'); return; }
+            }
+
+            const payload = {
+                ReportType: reportType,
+                ReportTitle: reportTitle,
+                SelectedDataPoints: selectedNames,
+                ExecutionTime: execTime,
+                StoragePath: storagePath, // 💡 送出儲存路徑
+                IsEnabled: document.getElementById('isEnabledCheck').checked
+            };
+
+            const btn = this;
+            btn.disabled = true;
+
+            fetch('/Setting/SaveReportParam', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) { location.reload(); } 
+                else { alert('儲存失敗：' + data.message); btn.disabled = false; }
+            })
+            .catch(err => { console.error(err); alert('伺服器錯誤'); btn.disabled = false; });
+        });
+    });
+
+    // --- 渲染卡片核心方法 ---
+    window.renderSavedReports = function() {
+        const container = document.getElementById('savedParamsContainer');
+        inlineChoicesInstances.forEach(c => c.destroy());
+        inlineChoicesInstances = [];
+
+        if (savedReportsData.length === 0) {
+            container.innerHTML = '<div class="col-12 text-secondary">No saved configurations yet.</div>';
+            return;
+        }
+
+        container.innerHTML = '';
+        savedReportsData.forEach((report, index) => {
+            if (report.isEditing) {
+                // 🟢 編輯模式
+                let optionsHtml = '';
+                poolRawData.forEach(tag => {
+                    if(tag.Name && tag.Name.trim() !== '') {
+                        const isSelected = report.SelectedDataPoints.includes(tag.Name) ? 'selected' : '';
+                        const label = tag.Description ? `${tag.Name} (${tag.Description})` : tag.Name;
+                        optionsHtml += `<option value="${tag.Name}" ${isSelected}>${label}</option>`;
+                    }
+                });
+
+                container.innerHTML += `
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded-3 h-100 shadow-sm" style="background-color: #fcfaff; border-color: #8D72E1 !important; border-width: 2px;">
+                            <h6 class="fw-bold theme-text mb-3"><i class="bi bi-pencil-square me-2"></i>Edit Configuration</h6>
+                            <div class="mb-2">
+                                <label class="form-label text-secondary small fw-bold mb-1">Report Title (Read-only)</label>
+                                <input type="text" class="form-control form-control-sm" id="editTitle_${index}" value="${report.ReportTitle}" readonly style="background-color: #e9ecef !important;" />
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label text-secondary small fw-bold mb-1">Storage Path</label>
+                                <input type="text" class="form-control form-control-sm" id="editPath_${index}" value="${report.StoragePath ?? ''}" placeholder="e.g., D:\\Reports" />
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-6">
+                                    <label class="form-label text-secondary small fw-bold mb-1">Type</label>
+                                    <select class="form-select form-select-sm" id="editType_${index}" onchange="toggleInlineSchedule(${index}, this.value)">
+                                        <option value="daily" ${report.ReportType === 'daily' ? 'selected' : ''}>Daily</option>
+                                        <option value="monthly" ${report.ReportType === 'monthly' ? 'selected' : ''}>Monthly</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <div id="editDailyContainer_${index}" style="${report.ReportType === 'daily' ? '' : 'display: none;'}">
+                                        <label class="form-label text-secondary small fw-bold mb-1">Execution Time</label>
+                                        <input type="time" class="form-control form-control-sm" id="editTimeDaily_${index}" value="${report.ReportType === 'daily' ? report.ExecutionTime : '08:00'}" />
+                                    </div>
+                                    <div id="editMonthlyContainer_${index}" style="${report.ReportType === 'monthly' ? '' : 'display: none;'}">
+                                        <label class="form-label text-secondary small fw-bold mb-1">Execution Day</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control form-control-sm" id="editTimeMonthly_${index}" min="1" max="31" value="${report.ReportType === 'monthly' ? report.ExecutionTime : '1'}" />
+                                            <span class="input-group-text bg-white text-secondary">th</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-secondary small fw-bold mb-1">Data Points</label>
+                                <select class="form-select inline-tag-select" id="editTags_${index}" multiple>
+                                    ${optionsHtml}
+                                </select>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top" style="border-color: rgba(141, 114, 225, 0.2) !important;">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="editStatus_${index}" ${report.IsEnabled ? 'checked' : ''}>
+                                    <label class="form-check-label small fw-bold text-secondary" for="editStatus_${index}">Enabled</label>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="cancelInlineEdit(${index})">Cancel</button>
+                                    <button class="btn btn-sm theme-btn" id="btnSaveInline_${index}" onclick="saveInlineEdit(${index})">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 🔵 檢視模式
+                const badges = report.SelectedDataPoints.map(p => 
+                    `<span class="badge rounded-pill shadow-sm" style="background-color: white; color: #6C4AB6; border: 1px solid rgba(141, 114, 225, 0.4);">${p}</span>`
+                ).join('');
+                
+                const typeBadgeColor = report.ReportType === 'daily' ? 'bg-primary' : 'bg-success';
+                const typeText = report.ReportType === 'daily' ? 'Daily Report' : 'Monthly Report';
+                const statusBadgeClass = report.IsEnabled ? 'bg-success' : 'bg-secondary';
+                const statusText = report.IsEnabled ? 'Enabled' : 'Disabled';
+                const scheduleText = report.ReportType === 'daily' ? `Every day at ${report.ExecutionTime}` : `Monthly on day ${report.ExecutionTime}`;
+                
+                const safeTitle = report.ReportTitle.replace(/'/g, "\\'");
+
+                container.innerHTML += `
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded-3 h-100 shadow-sm position-relative" style="background-color: rgba(255, 255, 255, 0.6); border-color: rgba(141, 114, 225, 0.3) !important;">
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="enableInlineEdit(${index})"><i class="bi bi-pencil-square"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteReportConfig('${safeTitle}')"><i class="bi bi-trash"></i></button>
+                            </div>
+                            <h6 class="fw-bold theme-text mb-2 pe-5">${report.ReportTitle} <span class="badge ${typeBadgeColor} ms-2">${typeText}</span></h6>
+                            <div class="d-flex align-items-center mb-1 small">
+                                <span class="badge ${statusBadgeClass} me-2">${statusText}</span>
+                                <span class="text-secondary fw-medium"><i class="bi bi-clock-history me-1"></i>${scheduleText}</span>
+                            </div>
+                            <div class="mb-3 small text-truncate">
+                                <span class="text-secondary fw-medium"><i class="bi bi-folder-fill me-1 theme-text"></i>Path: ${report.StoragePath || 'Default (伺服器預設路徑)'}</span>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                ${badges}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        // 綁定動態多選
+        document.querySelectorAll('.inline-tag-select').forEach(el => {
+            const choice = new Choices(el, { removeItemButton: true, searchEnabled: true, itemSelectText: 'Press to select' });
+            inlineChoicesInstances.push(choice);
+            el._choicesInstance = choice;
+        });
+    };
+
+    window.toggleInlineSchedule = function(index, type) {
+        document.getElementById(`editDailyContainer_${index}`).style.display = type === 'daily' ? 'block' : 'none';
+        document.getElementById(`editMonthlyContainer_${index}`).style.display = type === 'monthly' ? 'block' : 'none';
+    };
+
+    window.enableInlineEdit = function(index) { savedReportsData[index].isEditing = true; window.renderSavedReports(); };
+    window.cancelInlineEdit = function(index) { savedReportsData[index].isEditing = false; window.renderSavedReports(); };
+
+    // 💡 行內編輯儲存
+    window.saveInlineEdit = function(index) {
+        const reportTitle = document.getElementById(`editTitle_${index}`).value;
+        const reportType = document.getElementById(`editType_${index}`).value;
+        const storagePath = document.getElementById(`editPath_${index}`).value.trim(); // 💡 獲取編輯後的路徑
+        const isEnabled = document.getElementById(`editStatus_${index}`).checked;
+        
+        let execTime = '';
+        if (reportType === 'daily') {
+            execTime = document.getElementById(`editTimeDaily_${index}`).value;
+            if (!execTime) { alert('Please select an Execution Time!'); return; }
+        } else {
+            execTime = document.getElementById(`editTimeMonthly_${index}`).value;
+            if (!execTime || execTime < 1 || execTime > 31) { alert('Please enter a valid day (1-31)!'); return; }
+        }
+
+        const selectEl = document.getElementById(`editTags_${index}`);
+        const selectedNames = selectEl._choicesInstance.getValue(true);
+
+        if (selectedNames.length === 0) { alert('Please select at least one Data Point!'); return; }
+
+        const payload = {
+            ReportType: reportType,
+            ReportTitle: reportTitle,
+            SelectedDataPoints: selectedNames,
+            ExecutionTime: execTime,
+            StoragePath: storagePath, // 💡 送出編輯後的路徑
+            IsEnabled: isEnabled
+        };
+
+        const btn = document.getElementById(`btnSaveInline_${index}`);
+        btn.disabled = true;
+
+        fetch('/Setting/SaveReportParam', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) { location.reload(); } 
+            else { alert('儲存失敗：' + data.message); btn.disabled = false; }
+        })
+        .catch(err => { console.error(err); alert('伺服器錯誤'); btn.disabled = false; });
+    };
+
+    // --- 7. 刪除排程 ---
+    window.deleteReportConfig = function(title) {
+        if (!confirm(`Are you sure you want to delete the configuration for '${title}'?`)) return;
+
+        fetch('/Setting/DeleteReportParam', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ReportTitle: title })
+        })
+        .then(res => res.json())
+        .then(data => { if (data.success) { location.reload(); } else { alert('刪除失敗：' + data.message); } })
+        .catch(err => { console.error(err); alert('伺服器錯誤'); });
+    };
+</script>

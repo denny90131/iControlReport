@@ -1,0 +1,328 @@
+@{
+    ViewData["Title"] = "Manual Report Generation";
+}
+
+<style>
+    html, body {
+        background-color: #E8D8FA !important;
+    }
+    /* 基於 #E8D8FA 延伸的主題色系 */
+    .theme-text {
+        color: #6C4AB6 !important; 
+    }
+    .theme-btn {
+        background-color: #8D72E1 !important; 
+        color: white !important;
+        transition: all 0.2s ease-in-out;
+    }
+    .theme-btn:hover {
+        background-color: #6C4AB6 !important; 
+        transform: translateY(-2px);
+    }
+    .card {
+        background-color: #E8E1FA !important; 
+        border-radius: 30px;
+    }
+    .form-control, .form-select {
+        background-color: rgba(255, 255, 255, 0.6) !important;
+        color: #513c8c !important;                             
+        border: 1px solid rgba(141, 114, 225, 0.3) !important;  
+        border-radius: 10px !important;                         
+        transition: all 0.2s ease-in-out !important;
+    }
+    .form-control:focus, .form-select:focus {
+        background-color: #ffffff !important;                   
+        color: #4A148C !important;
+        border-color: #8D72E1 !important;                      
+        box-shadow: 0 0 0 0.25rem rgba(141, 114, 225, 0.25) !important; 
+    }
+
+    /* Choices.js 多選框客製化紫色風格 */
+    .choices[data-type*="select-multiple"] .choices__inner {
+        background-color: rgba(255, 255, 255, 0.6) !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(141, 114, 225, 0.3) !important;
+        min-height: 45px;
+        padding-bottom: 0px !important;
+    }
+    .choices.is-focused .choices__inner {
+        background-color: #ffffff !important;
+        border-color: #8D72E1 !important;
+        box-shadow: 0 0 0 0.25rem rgba(141, 114, 225, 0.25) !important;
+    }
+    .choices__list--multiple .choices__item {
+        background-color: #8D72E1 !important; /* 選中的標籤背景 */
+        border: 1px solid #6C4AB6 !important;
+        border-radius: 8px !important;
+        font-weight: 500;
+        color: white;
+    }
+    .choices__list--dropdown {
+        background: #e3daf5 !important;
+        border: 1px solid #8D72E1 !important;
+        border-radius: 16px !important;
+        margin-top: 5px !important;
+        z-index: 1050 !important;
+    }
+    .choices__item--choice {
+        color: #513c8c !important;
+        font-weight: 500;
+        border-radius: 8px;
+    }
+    .choices__item--choice.is-highlighted {
+        background-color: #8D72E1 !important;
+        color: white !important;
+    }
+</style>
+
+<link class="target-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+
+<div class="container-fluid py-3">
+    <div class="card shadow-sm border-0 rounded-3 max-width-800 mx-auto" style="max-width: 900px;">
+        <div class="card-body p-4 d-flex flex-column gap-4">
+            <h4 class="card-title mb-0 theme-text fw-bold">
+                <i class="bi bi-file-earmark-bar-graph-fill me-2"></i>Manual Report Generation
+            </h4>
+            <p class="text-secondary mb-0" style="font-size: 0.95rem;">
+                您可以在此手動指定報表類型與時間區間，並透過點位池選擇對應的數據點，即時觸發報表運算任務。
+            </p>
+
+            <hr class="my-1" style="border-color: rgba(141, 114, 225, 0.2);">
+
+            <form id="manualReportForm">
+                <div class="row g-4">
+                    @* 報表抬頭 *@
+                    <div class="col-12 text-start mt-4">
+                        <div class="form-group">
+                            <!-- 標籤：會自動抓取 Model 屬性上的 [Display(Name = "...")] 設定 -->
+                            <label class="form-label text-secondary fw-bold">使用者名稱</label>
+                            
+                            <!-- 輸入框：自動綁定型別，若為過期金鑰或數字會自動生成對應的 HTML type -->
+                            <input id="fileTitleInput" class="form-control" placeholder="請輸入檔案抬頭名稱" />
+
+                            <div id="fileTitleError" class="text-danger small mt-1 d-none">請輸入檔案抬頭名稱</div>
+                        </div>
+                    </div>
+
+                    @* 報表類型切換 *@
+                    <div class="col-md-6">
+                        <label for="reportType" class="form-label text-secondary fw-bold">Report Type (報表類型)</label>
+                        <select id="reportType" class="form-select form-select-lg fw-bold theme-text" required>
+                            <option value="daily" selected>Daily Report (日報表)</option>
+                            <option value="monthly">Monthly Report (月報表)</option>
+                        </select>
+                    </div>
+                    @* 依報表類型變動查詢條件 *@
+                    <div class="col-md-6">
+                        <div id="dailyPickerWrapper">
+                            <label class="form-label text-secondary fw-bold">Target Date (目標日期)</label>
+                            <input type="date" id="targetDate" class="form-control form-control-lg">
+                        </div>
+                        <div id="monthlyPickerWrapper" style="display: none;">
+                            <label class="form-label text-secondary fw-bold">Target Month (目標月份)</label>
+                            <input type="month" id="targetMonth" class="form-control form-control-lg">
+                        </div>
+                    </div>
+                    @* 報表點位設置 *@
+                    <div class="col-12">
+                        <div class="p-4 rounded-3 shadow-sm" style="border: 1px solid rgba(141, 114, 225, 0.2);">
+                            <h6 class="fw-bold theme-text mb-3"><i class="bi bi-tags-fill me-2"></i>Data Points Mapping</h6>
+                            <label class="form-label fw-bold text-secondary mb-1">Select Targets from Tag Pool</label>
+                            <p class="text-muted small mb-3">Choose the mapped 'Name's that should be included as columns in this report.</p>
+                            
+                            <select id="tagPoolNameSelect" multiple></select>
+                        </div>
+                    </div>
+                    
+
+                    @* 生成報表按鈕 *@
+                    <div class="col-12 text-end mt-4">
+                        <button type="submit" class="btn theme-btn px-5 btn-lg shadow-sm" id="generateReportBtn">
+                            <i class="bi bi-lightning-charge-fill me-1"></i> Generate Report
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        @* 報表類型 *@
+        const reportTypeSelect = document.getElementById('reportType');
+        @* 日報篩選元件 *@
+        const dailyPickerWrapper = document.getElementById('dailyPickerWrapper');
+        @* 月報篩選元件 *@
+        const monthlyPickerWrapper = document.getElementById('monthlyPickerWrapper');
+        
+        @* 日報篩選日期輸入 *@
+        const targetDateInput = document.getElementById('targetDate');
+        @* 月報篩選日期輸入 *@
+        const targetMonthInput = document.getElementById('targetMonth');
+        @* tag選取元件 *@
+        const tagSelectElement = document.getElementById('tagPoolNameSelect');
+        @* 檔案抬頭名稱元件 *@
+        const fileTitleInput = document.getElementById('fileTitleInput'); 
+        @* 報表生成按鈕 *@
+        const btn = document.getElementById('generateReportBtn');
+        @* 檔案抬頭生成錯誤提示字 *@
+        const fileTitleError = document.getElementById('fileTitleError'); // 取得紅字區塊
+
+        // 初始化日期預設值(日報 - 昨天日期)
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        targetDateInput.value = yesterday.toISOString().split('T')[0];
+        targetDateInput.setAttribute('required', 'required');
+
+        // 初始化月份預設值(月報 - 上個月)
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = String(now.getMonth()).padStart(2, '0');
+        targetMonthInput.value = `${currentYear}-${currentMonth === '00' ? '12' : currentMonth}`;
+
+        // 後端來之ViewBag
+        const poolRawData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.TagPool?.TagPool ?? new object[] {}));
+
+        // 2. 初始化 Choices.js 實例
+
+        const choicesInstance = new Choices(tagSelectElement, {
+            removeItemButton: true,
+            searchEnabled: true,
+            placeholder: true,
+            placeholderValue: "Click to select data points...",
+            itemSelectText: 'Press to select'
+        });
+
+        // 3. 將點位池數據轉為 Choices.js 識別的格式 (以對照用的 Name 作為實際 Value)
+        const choicesOptions = poolRawData
+            .filter(tag => tag.Name && tag.Name.trim() !== '')
+            .map(tag => ({
+                value: tag.Name, // 👈 後端對照 GetTagIdsFromPool 需要的名字（如: MVCB）
+                label: tag.Description ? `${tag.Name} (${tag.Description})` : tag.Name
+            }));
+
+        if (choicesOptions.length > 0) {
+            choicesInstance.setChoices(choicesOptions, 'value', 'label', true);
+        } else {
+            choicesInstance.setChoices([{ value: '', label: 'No tags found in Tag Pool.', disabled: true }], 'value', 'label', true);
+        }
+
+        // 監聽報表類型選擇切換時，元件及型態變換
+        reportTypeSelect.addEventListener('change', function() {
+            if (this.value === 'daily') {
+                dailyPickerWrapper.style.display = 'block';
+                monthlyPickerWrapper.style.display = 'none';
+                targetDateInput.setAttribute('required', 'required');
+                targetMonthInput.removeAttribute('required');
+            } else {
+                dailyPickerWrapper.style.display = 'none';
+                monthlyPickerWrapper.style.display = 'block';
+                targetMonthInput.setAttribute('required', 'required');
+                targetDateInput.removeAttribute('required');
+            }
+        });
+
+        // --- 表單送出非同步要求 ---
+        document.getElementById('manualReportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // 從 Choices.js 實例中直接撈取選取的所有點位對照名稱 (Array)
+            const selectedTags = choicesInstance.getValue(true); 
+            const fileHeader = fileTitleInput.value;
+            const type = reportTypeSelect.value;
+            let timeValue = "";
+
+            @* 檢查選取tag數量 *@
+            if (selectedTags.length === 0) {
+                alert('Please select at least one Data Point for the report!');
+                return;
+            }
+
+            @* 檢查檔案抬頭是否為空 *@
+            if (fileHeader === "") 
+            {
+                if (fileTitleError) fileTitleError.classList.remove('d-none');
+                fileTitleInput.classList.add('is-invalid');
+                fileTitleInput.focus();
+                return;
+            } 
+            else 
+            {
+                if (fileTitleError) fileTitleError.classList.add('d-none');
+                fileTitleInput.classList.remove('is-invalid');
+            }
+            
+            @* 檢查報表類型 *@
+            if (type === 'daily') {
+                timeValue = targetDateInput.value;
+            } else {
+                timeValue = targetMonthInput.value; 
+            }
+            
+            @* 檢查是否有目標時間 *@
+            if (!timeValue) {
+                alert('Please select a valid target date or month!');
+                return;
+            }
+
+            const payload = {
+                FileHeader: fileHeader,
+                ReportType: type,
+                TargetTime: timeValue,
+                SelectedDataPoints: selectedTags
+            };
+
+            console.log("手動報表觸發參數:", payload);
+
+            @* 加載動畫 *@
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Calculating...';
+            btn.disabled = true;
+
+            @* 後端串接宣告(POST) *@
+            fetch('/Report/GenerateManualReport', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("伺服器回應錯誤，無法生成報表。");
+                // ✅ 修正：改用 response.blob() 來接收 Excel 的二進位檔案流，不走 JSON 解析
+                return response.blob(); 
+            })
+            .then(blob => {
+                // 🚀 大絕招：在記憶體中建立一個指向該 Excel 二進位的下載 URL
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                
+                // 動態決定下載下來的實體副檔名與名稱
+                const filePrefix = type === 'daily' ? 'Daily_Report' : 'Monthly_Report';
+                a.download = `${filePrefix}_${timeValue}.xlsx`; 
+                
+                // 模擬使用者點擊下載連結
+                document.body.appendChild(a);
+                a.click(); 
+                
+                // 清理記憶體防滲漏
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error('Generation error:', error);
+                alert('發生非預期錯誤，報表生成失敗，請檢查資料庫或連線狀態。');
+            })
+            .finally(() => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            });
+        });
+    
+    });
+</script>
