@@ -145,7 +145,7 @@ namespace IControlReporter.Services
                 var orderedData = pointGroup.OrderBy(x => x.EventTime).ToList();
 
                 _logger.LogInformation($"📊 [報表數據驗證核心] 開始計算點位 ID: {pointId} | 本次總原始筆數: {orderedData.Count} 筆");
-                _logger.LogInformation($"{"時間軸 (Hour)",-18} | {"狀態",-4} | {"每小時第一筆 (First)",-20} | {"每小時最後一筆 (Last)",-20} | {"翻轉補償",-4} | {"計算結果 (DiffValue)",-15}");
+                _logger.LogInformation($"{"時間軸 (Hour)",-18} | {"狀態",-4} | {"前一小時最後一筆",-25} | {"本小時最後一筆",-25} | {"翻轉補償",-6} | {"計算結果 (DiffValue)",-15}");
 
                 // 💡 先把這點位「每個小時的第一筆資料」撈出來，做成以整點為 Key 的 Dictionary
                 var firstRecordOfEachHour = orderedData
@@ -155,54 +155,62 @@ namespace IControlReporter.Services
                         g => g.OrderBy(x => x.EventTime).First() // 只拿該小時最早的那一筆
                     );
 
+                // 💡【新邏輯】先把這點位「每個小時的最後一筆資料」撈出來，做成以整點為 Key 的 Dictionary
+                var lastRecordOfEachHour = orderedData
+                    .GroupBy(x => new DateTime(x.EventTime.Year, x.EventTime.Month, x.EventTime.Day, x.EventTime.Hour, 0, 0))
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.OrderBy(x => x.EventTime).Last() // 只拿該小時最晚的那一筆
+                    );
+
                 // 3. 遍歷完整的 24 小時基準
                 foreach (DateTime currentHour in fullHourTimeline)
                 {
                     float diffValue = 0f;
                     string status = "OK";
                     string isFlipped = "NO";
+                    string previousValStr = "N/A";
                     string currentValStr = "N/A";
-                    string nextValStr = "N/A";
 
-                    DateTime nextHour = currentHour.AddHours(1);
+                    DateTime previousHour = currentHour.AddHours(-1);
 
-                    // 💡 檢查是否有「這一小時的第一筆」與「下一小時的第一筆」
-                    bool hasCurrentFirst = firstRecordOfEachHour.TryGetValue(currentHour, out var currentFirstRecord);
-                    bool hasNextFirst = firstRecordOfEachHour.TryGetValue(nextHour, out var nextFirstRecord);
+                    // 💡【新邏輯】檢查是否有「前一小時的最後一筆」與「這一小時的最後一筆」
+                    bool hasPreviousLast = lastRecordOfEachHour.TryGetValue(previousHour, out var previousLastRecord);
+                    bool hasCurrentLast = lastRecordOfEachHour.TryGetValue(currentHour, out var currentLastRecord);
 
-                    if (hasCurrentFirst && hasNextFirst)
+                    if (hasPreviousLast && hasCurrentLast)
                     {
-                        float currentFirstVal = currentFirstRecord.Value ?? 0f;
-                        float nextFirstVal = nextFirstRecord.Value ?? 0f;
+                        float previousLastVal = previousLastRecord.Value ?? 0f;
+                        float currentLastVal = currentLastRecord.Value ?? 0f;
 
-                        currentValStr = $"{currentFirstVal:F2} ({currentFirstRecord.EventTime:mm:ss})";
-                        nextValStr = $"{nextFirstVal:F2} ({nextFirstRecord.EventTime:mm:ss})";
+                        previousValStr = $"{previousLastVal:F2} ({previousLastRecord.EventTime:mm:ss})";
+                        currentValStr = $"{currentLastVal:F2} ({currentLastRecord.EventTime:mm:ss})";
 
-                        // 電表翻轉補償演算法 (下小時第一筆 >= 這小時第一筆)
-                        if (nextFirstVal >= currentFirstVal)
+                        // 電表翻轉補償演算法 (本小時最後一筆 >= 前一小時最後一筆)
+                        if (currentLastVal >= previousLastVal)
                         {
-                            diffValue = nextFirstVal - currentFirstVal;
+                            diffValue = currentLastVal - previousLastVal;
                         }
                         else
                         {
-                            diffValue = (maxMeterValue - currentFirstVal) + nextFirstVal;
+                            diffValue = (maxMeterValue - previousLastVal) + currentLastVal;
                             isFlipped = "YES 🔥"; 
-                            _logger.LogWarning($"⚠️ [電表翻轉補償] 測點 {pointId} 在 {currentHour:yyyy-MM-dd HH:mm} 跨時段發生歸零。前值: {currentFirstVal}, 後值: {nextFirstVal}, 補償後增量: {diffValue}");
+                            _logger.LogWarning($"⚠️ [電表翻轉補償] 測點 {pointId} 在 {currentHour:yyyy-MM-dd HH:mm} 時段發生歸零。前值: {previousLastVal}, 後值: {currentLastVal}, 補償後增量: {diffValue}");
                         }
                     }
                     else
                     {
-                        // 💡 防呆機制：如果缺了任一筆，就判定為資料不連續需補點（差值給 0f）
+                        // 💡 防呆機制：如果缺了任一筆，就判定為資料不連續需補點 (差值給 0f)
                         status = "補點";
                         diffValue = 0f;
 
-                        currentValStr = hasCurrentFirst ? $"{currentFirstRecord.Value ?? 0f:F2} ({currentFirstRecord.EventTime:mm:ss})" : "無資料";
-                        nextValStr = hasNextFirst ? $"{nextFirstRecord.Value ?? 0f:F2} ({nextFirstRecord.EventTime:mm:ss})" : "無資料";
+                        previousValStr = hasPreviousLast ? $"{previousLastRecord.Value ?? 0f:F2} ({previousLastRecord.EventTime:mm:ss})" : "無資料";
+                        currentValStr = hasCurrentLast ? $"{currentLastRecord.Value ?? 0f:F2} ({currentLastRecord.EventTime:mm:ss})" : "無資料";
                     }
 
                     // 🚀 將跨小時的精確比對數值與時間點刷出至 Console
                     string hourStr = currentHour.ToString("yyyy-MM-dd HH:mm");
-                    _logger.LogInformation($"{hourStr,-18} | {status,-4} | {currentValStr,-25} | {nextValStr,-25} | {isFlipped,-6} | {diffValue,15:F2}");
+                    _logger.LogInformation($"{hourStr,-18} | {status,-4} | {previousValStr,-25} | {currentValStr,-25} | {isFlipped,-6} | {diffValue,15:F2}");
 
                     results.Add(new ReportResultDto
                     {
@@ -270,45 +278,45 @@ namespace IControlReporter.Services
                 int pointId = pointGroup.Key;
                 var orderedData = pointGroup.OrderBy(x => x.EventTime).ToList();
 
-                // 💡 【關鍵優化】先把這點位「每一天 的第一筆資料」撈出來，做成以「日期 (Date)」為 Key 的 Dictionary
-                var firstRecordOfEachDay = orderedData
+                // 💡【新邏輯】先把這點位「每一天的最後一筆資料」撈出來，做成以「日期 (Date)」為 Key 的 Dictionary
+                var lastRecordOfEachDay = orderedData
                     .GroupBy(x => x.EventTime.Date)
                     .ToDictionary(
                         g => g.Key, 
-                        g => g.OrderBy(x => x.EventTime).First() // 只拿每天最早的那一筆
+                        g => g.OrderBy(x => x.EventTime).Last() // 只拿每天最晚的那一筆
                     );
 
                 // 3. 遍歷當月每一天，精準計算當天的跨日差值
                 for (int i = 0; i < fullDayTimeline.Count; i++)
                 {
                     DateTime currentDay = fullDayTimeline[i];
-                    DateTime nextDay = currentDay.AddDays(1);
+                    DateTime previousDay = currentDay.AddDays(-1);
 
                     float diffValue = 0f;
 
-                    // 💡 檢查是否有「這一天 的第一筆」與「隔一天 的第一筆」
-                    bool hasCurrentFirst = firstRecordOfEachDay.TryGetValue(currentDay, out var currentDayFirst);
-                    bool hasNextFirst = firstRecordOfEachDay.TryGetValue(nextDay, out var nextDayFirst);
+                    // 💡【新邏輯】檢查是否有「前一天的最後一筆」與「這一天的最後一筆」
+                    bool hasPreviousLast = lastRecordOfEachDay.TryGetValue(previousDay, out var previousDayLast);
+                    bool hasCurrentLast = lastRecordOfEachDay.TryGetValue(currentDay, out var currentDayLast);
 
-                    if (hasCurrentFirst && hasNextFirst)
+                    if (hasPreviousLast && hasCurrentLast)
                     {
-                        float currentFirstVal = currentDayFirst.Value ?? 0f;
-                        float nextFirstVal = nextDayFirst.Value ?? 0f;
+                        float previousLastVal = previousDayLast.Value ?? 0f;
+                        float currentLastVal = currentDayLast.Value ?? 0f;
 
-                        // 電表翻轉補償演算法 (隔天第一筆 >= 當天第一筆)
-                        if (nextFirstVal >= currentFirstVal)
+                        // 電表翻轉補償演算法 (當天最後一筆 >= 前一天最後一筆)
+                        if (currentLastVal >= previousLastVal)
                         {
-                            diffValue = nextFirstVal - currentFirstVal;
+                            diffValue = currentLastVal - previousLastVal;
                         }
                         else
                         {
-                            diffValue = (maxMeterValue - currentFirstVal) + nextFirstVal;
-                            _logger.LogWarning($"⚠️ [月報表翻轉補償] 測點 {pointId} 在跨日邊界 {currentDay:yyyy-MM-dd} -> {nextDay:yyyy-MM-dd} 發生歸零。前值: {currentFirstVal}, 後值: {nextFirstVal}, 補償後增量: {diffValue}");
+                            diffValue = (maxMeterValue - previousLastVal) + currentLastVal;
+                            _logger.LogWarning($"⚠️ [月報表翻轉補償] 測點 {pointId} 在 {currentDay:yyyy-MM-dd} 發生歸零。前值: {previousLastVal}, 後值: {currentLastVal}, 補償後增量: {diffValue}");
                         }
                     }
                     else
                     {
-                        // 💡 防呆機制：如果缺了任一天的起點資料，判定數據不連續，當天用量自動補 0f
+                        // 💡 防呆機制：如果缺了任一天的終點資料，判定數據不連續，當天用量自動補 0f
                         diffValue = 0f;
                     }
 
