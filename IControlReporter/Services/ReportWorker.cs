@@ -28,7 +28,7 @@ namespace IControlReporter.Services
         {
             _serviceProvider = serviceProvider;
             _logger = logger;
-            _jsonFilePath = Path.Combine(env.ContentRootPath, "ReportParams.json");
+            _jsonFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ReportParams.json");
         }
 
         // 讀取報表生產排程池

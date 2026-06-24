@@ -1,12 +1,11 @@
 @{
-    ViewData["Title"] = "Manual Report Generation";
+    ViewData["Title"] = "Report Management Center";
 }
 
 <style>
     html, body {
         background-color: #E8D8FA !important;
     }
-    /* 基於 #E8D8FA 延伸的主題色系 */
     .theme-text {
         color: #6C4AB6 !important; 
     }
@@ -25,19 +24,19 @@
     }
     .form-control, .form-select {
         background-color: rgba(255, 255, 255, 0.6) !important;
-        color: #513c8c !important;                             
+        color: #513c8c !important;                                     
         border: 1px solid rgba(141, 114, 225, 0.3) !important;  
-        border-radius: 10px !important;                         
+        border-radius: 10px !important;                                 
         transition: all 0.2s ease-in-out !important;
     }
     .form-control:focus, .form-select:focus {
-        background-color: #ffffff !important;                   
+        background-color: #ffffff !important;                           
         color: #4A148C !important;
-        border-color: #8D72E1 !important;                      
+        border-color: #8D72E1 !important;                              
         box-shadow: 0 0 0 0.25rem rgba(141, 114, 225, 0.25) !important; 
     }
 
-    /* Choices.js 多選框客製化紫色風格 */
+    /* Choices.js 客製化風格 */
     .choices[data-type*="select-multiple"] .choices__inner {
         background-color: rgba(255, 255, 255, 0.6) !important;
         border-radius: 10px !important;
@@ -51,7 +50,7 @@
         box-shadow: 0 0 0 0.25rem rgba(141, 114, 225, 0.25) !important;
     }
     .choices__list--multiple .choices__item {
-        background-color: #8D72E1 !important; /* 選中的標籤背景 */
+        background-color: #8D72E1 !important; 
         border: 1px solid #6C4AB6 !important;
         border-radius: 8px !important;
         font-weight: 500;
@@ -73,145 +72,327 @@
         background-color: #8D72E1 !important;
         color: white !important;
     }
+    .form-switch .form-check-input:checked {
+        background-color: #8D72E1;
+        border-color: #8D72E1;
+    }
+
+    /* 頁籤客製化 */
+    .nav-tabs .nav-link {
+        color: #6C4AB6 !important;
+        font-weight: 600;
+        border-radius: 15px 15px 0 0;
+        border: none;
+        padding: 12px 25px;
+    }
+    .nav-tabs .nav-link.active {
+        background-color: #E8E1FA !important;
+        border: 1px solid rgba(141, 114, 225, 0.2) !important;
+        border-bottom: none !important;
+    }
 </style>
 
-<link class="target-css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 
 <div class="container-fluid py-3">
-    <div class="card shadow-sm border-0 rounded-3 max-width-800 mx-auto" style="max-width: 900px;">
-        <div class="card-body p-4 d-flex flex-column gap-4">
-            <h4 class="card-title mb-0 theme-text fw-bold">
-                <i class="bi bi-file-earmark-bar-graph-fill me-2"></i>Manual Report Generation
-            </h4>
-            <p class="text-secondary mb-0" style="font-size: 0.95rem;">
-                您可以在此手動指定報表類型與時間區間，並透過點位池選擇對應的數據點，即時觸發報表運算任務。
-            </p>
+    
+    <ul class="nav nav-tabs border-0 mb-3 mx-auto" id="reportManagementTabs" role="tablist" style="max-width: 1200px;">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule-panel" type="button" role="tab">
+                <i class="bi bi-calendar-check-fill me-2"></i>定時排程參數設置
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-panel" type="button" role="tab">
+                <i class="bi bi-lightning-charge-fill me-2"></i>手動報表即時生成
+            </button>
+        </li>
+    </ul>
 
-            <hr class="my-1" style="border-color: rgba(141, 114, 225, 0.2);">
+    <div class="tab-content" id="reportManagementTabsContent">
+        
+        <div class="tab-pane fade show active" id="schedule-panel" role="tabpanel">
+            <div class="card shadow-sm border-0 rounded-3 mb-4 max-width-800 mx-auto" style="max-width: 1200px;">
+                <div class="card-body">
+                    <h5 class="card-title mb-4 theme-text">
+                        <i class="bi bi-file-earmark-spreadsheet-fill me-2"></i>報表參數設置
+                    </h5>
 
-            <form id="manualReportForm">
-                <div class="row g-4">
-                    @* 報表抬頭 *@
-                    <div class="col-12 text-start mt-4">
-                        <div class="form-group">
-                            <!-- 標籤：會自動抓取 Model 屬性上的 [Display(Name = "...")] 設定 -->
-                            <label class="form-label text-secondary fw-bold">使用者名稱</label>
-                            
-                            <!-- 輸入框：自動綁定型別，若為過期金鑰或數字會自動生成對應的 HTML type -->
-                            <input id="fileTitleInput" class="form-control" placeholder="請輸入檔案抬頭名稱" />
+                    <div class="row g-4">
+                        <div class="col-md-5">
+                            <div class="p-4 bg-white rounded-3 shadow-sm h-100" style="border: 1px solid rgba(141, 114, 225, 0.2);">
+                                <h6 class="fw-bold theme-text mb-3"><i class="bi bi-gear-wide-connected me-2"></i>基礎設置</h6>
+                                
+                                <label class="form-label fw-bold text-secondary mb-1">報表類型</label>
+                                <select class="form-select mb-3" id="reportTypeSelect">
+                                    <option value="daily">日報表</option>
+                                    <option value="monthly">月報表</option>
+                                </select>
 
-                            <div id="fileTitleError" class="text-danger small mt-1 d-none">請輸入檔案抬頭名稱</div>
+                                <label class="form-label fw-bold text-secondary mb-1">報表抬頭</label>
+                                <input type="text" class="form-control mb-3" id="reportTitleInput" placeholder="e.g., Main Substation Report" />
+                                
+                                <label class="form-label fw-bold text-secondary mb-1">儲存路徑</label>
+                                <input type="text" class="form-control" id="storagePathInput" placeholder="e.g., D:\EMS_Reports\Daily\" />
+                                <span class="text-muted d-block mb-3" style="font-size: 11px;"><i class="bi bi-info-circle me-1"></i> 留空則使用伺服器預設路徑</span>
+
+                                <div class="row mt-3">
+                                    <div class="col-6">
+                                        <div id="dailyScheduleContainer">
+                                            <label class="form-label fw-bold text-secondary mb-1">執行時間</label>
+                                            <input type="time" class="form-control" id="executionTimeDaily" value="08:00" />
+                                        </div>
+                                        <div id="monthlyScheduleContainer" style="display: none;">
+                                            <label class="form-label fw-bold text-secondary mb-1">執行日期</label>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control" id="executionTimeMonthly" min="1" max="31" value="1" />
+                                                <span class="input-group-text bg-white text-secondary">天</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 d-flex flex-column">
+                                        <label class="form-label fw-bold text-secondary mb-1">啟用狀態</label>
+                                        <div class="form-check form-switch mt-2">
+                                            <input class="form-check-input fs-5 shadow-sm" type="checkbox" role="switch" id="isEnabledCheck" checked>
+                                            <label class="form-check-label ms-2 pt-1 fw-medium text-secondary" for="isEnabledCheck">啟用</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-7">
+                            <div class="p-4 bg-white rounded-3 shadow-sm h-100" style="border: 1px solid rgba(141, 114, 225, 0.2);">
+                                <h6 class="fw-bold theme-text mb-3"><i class="bi bi-tags-fill me-2"></i>點表映射</h6>
+                                <label class="form-label fw-bold text-secondary mb-1">選擇點表池之執行目標</label>
+                                <p class="text-muted small mb-2">請從點位池中，選取你這張報表『想要呈現的電表欄位（中文字或別名）』。</p>
+                                <select id="tagPoolNameSelect" multiple></select>
+                            </div>
                         </div>
                     </div>
 
-                    @* 報表類型切換 *@
-                    <div class="col-md-6">
-                        <label for="reportType" class="form-label text-secondary fw-bold">Report Type (報表類型)</label>
-                        <select id="reportType" class="form-select form-select-lg fw-bold theme-text" required>
-                            <option value="daily" selected>Daily Report (日報表)</option>
-                            <option value="monthly">Monthly Report (月報表)</option>
-                        </select>
-                    </div>
-                    @* 依報表類型變動查詢條件 *@
-                    <div class="col-md-6">
-                        <div id="dailyPickerWrapper">
-                            <label class="form-label text-secondary fw-bold">Target Date (目標日期)</label>
-                            <input type="date" id="targetDate" class="form-control form-control-lg">
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top" style="border-color: rgba(141, 114, 225, 0.2) !important;">
+                        <div class="text-secondary small">
+                            <i class="bi bi-info-circle me-1"></i> 在更新參數設置時，請先確認點位池是否已更新!!!
                         </div>
-                        <div id="monthlyPickerWrapper" style="display: none;">
-                            <label class="form-label text-secondary fw-bold">Target Month (目標月份)</label>
-                            <input type="month" id="targetMonth" class="form-control form-control-lg">
-                        </div>
-                    </div>
-                    @* 報表點位設置 *@
-                    <div class="col-12">
-                        <div class="p-4 rounded-3 shadow-sm" style="border: 1px solid rgba(141, 114, 225, 0.2);">
-                            <h6 class="fw-bold theme-text mb-3"><i class="bi bi-tags-fill me-2"></i>Data Points Mapping</h6>
-                            <label class="form-label fw-bold text-secondary mb-1">Select Targets from Tag Pool</label>
-                            <p class="text-muted small mb-3">Choose the mapped 'Name's that should be included as columns in this report.</p>
-                            
-                            <select id="tagPoolNameSelect" multiple></select>
-                        </div>
-                    </div>
-                    
-
-                    @* 生成報表按鈕 *@
-                    <div class="col-12 text-end mt-4">
-                        <button type="submit" class="btn theme-btn px-5 btn-lg shadow-sm" id="generateReportBtn">
-                            <i class="bi bi-lightning-charge-fill me-1"></i> Generate Report
+                        <button class="btn theme-btn px-5 py-2 fw-bold" id="saveParamsBtn">
+                            <i class="bi bi-save me-2"></i> 存儲報表參數
                         </button>
                     </div>
                 </div>
-            </form>
+            </div>
+
+            <div class="card shadow-sm border-0 rounded-3 mb-4 mx-auto" style="max-width: 1200px;">
+                <div class="card-body">
+                    <h5 class="card-title mb-4 theme-text">
+                        <i class="bi bi-card-list me-2"></i>排程名單列表
+                    </h5>
+                    <div class="row g-3" id="savedParamsContainer"></div>
+                </div>
+            </div>
         </div>
+
+        <div class="tab-pane fade" id="manual-panel" role="tabpanel">
+            <div class="card shadow-sm border-0 rounded-3 mx-auto" style="max-width: 1200px;">
+                <div class="card-body p-4 d-flex flex-column gap-4">
+                    <h4 class="card-title mb-0 theme-text fw-bold">
+                        <i class="bi bi-file-earmark-bar-graph-fill me-2"></i>手動報表即時生成
+                    </h4>
+                    <p class="text-secondary mb-0" style="font-size: 0.95rem;">
+                        您可以在此手動指定報表類型與時間區間，並透過點位池選擇對應的數據點，即時觸發報表運算任務。
+                    </p>
+
+                    <hr class="my-1" style="border-color: rgba(141, 114, 225, 0.2);">
+
+                    <form id="manualReportForm">
+                        <div class="row g-4">
+                            <div class="col-12 text-start mt-2">
+                                <div class="form-group">
+                                    <label class="form-label text-secondary fw-bold">檔案抬頭名稱</label>
+                                    <input id="fileTitleInput" class="form-control" placeholder="請輸入檔案抬頭名稱" />
+                                    <div id="fileTitleError" class="text-danger small mt-1 d-none">請輸入檔案抬頭名稱</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="reportType" class="form-label text-secondary fw-bold">報表類型</label>
+                                <select id="reportType" class="form-select form-select-lg fw-bold theme-text" required>
+                                    <option value="daily" selected>日報表</option>
+                                    <option value="monthly">月報表</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div id="dailyPickerWrapper">
+                                    <label class="form-label text-secondary fw-bold">目標日期</label>
+                                    <input type="date" id="targetDate" class="form-control form-control-lg">
+                                </div>
+                                <div id="monthlyPickerWrapper" style="display: none;">
+                                    <label class="form-label text-secondary fw-bold">目標月份</label>
+                                    <input type="month" id="targetMonth" class="form-control form-control-lg">
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="p-4 rounded-3 shadow-sm" style="border: 1px solid rgba(141, 114, 225, 0.2); background-color: white;">
+                                    <h6 class="fw-bold theme-text mb-3"><i class="bi bi-tags-fill me-2"></i>資料點位映射</h6>
+                                    <label class="form-label fw-bold text-secondary mb-1">從點位池中選取執行目標</label>
+                                    <p class="text-muted small mb-3">請從點位池中，選取你這張報表『想要呈現的電表欄位（中文字或別名）』。</p>
+                                    <select id="manualTagPoolSelect" multiple></select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12 text-end mt-4">
+                                <button type="submit" class="btn theme-btn px-5 btn-lg shadow-sm" id="generateReportBtn">
+                                    <i class="bi bi-lightning-charge-fill me-1"></i> 生成報表
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        @* 報表類型 *@
-        const reportTypeSelect = document.getElementById('reportType');
-        @* 日報篩選元件 *@
-        const dailyPickerWrapper = document.getElementById('dailyPickerWrapper');
-        @* 月報篩選元件 *@
-        const monthlyPickerWrapper = document.getElementById('monthlyPickerWrapper');
-        
-        @* 日報篩選日期輸入 *@
-        const targetDateInput = document.getElementById('targetDate');
-        @* 月報篩選日期輸入 *@
-        const targetMonthInput = document.getElementById('targetMonth');
-        @* tag選取元件 *@
-        const tagSelectElement = document.getElementById('tagPoolNameSelect');
-        @* 檔案抬頭名稱元件 *@
-        const fileTitleInput = document.getElementById('fileTitleInput'); 
-        @* 報表生成按鈕 *@
-        const btn = document.getElementById('generateReportBtn');
-        @* 檔案抬頭生成錯誤提示字 *@
-        const fileTitleError = document.getElementById('fileTitleError'); // 取得紅字區塊
+    // --- 全域變數宣告 ---
+    let poolRawData = [];
+    let savedReportsData = [];
+    let inlineChoicesInstances = [];
+    let mainScheduleChoices;
+    let manualChoicesInstance;
 
-        // 初始化日期預設值(日報 - 昨天日期)
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // 1. 解析後端資料來源 (一律共用此全域點位池變數)
+        poolRawData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.TagPool?.TagPool ?? new object[] {}));
+        
+        // 2. 將原始數據轉為 Choices.js 專用格式
+        const choicesOptions = poolRawData
+            .filter(tag => tag.Name && tag.Name.trim() !== '')
+            .map(tag => ({
+                value: tag.Name,
+                label: tag.Description ? `${tag.Name} (${tag.Description})` : tag.Name
+            }));
+
+        // ====================================================================
+        // 📅 【分頁 A：排程管理邏輯】
+        // ====================================================================
+        
+        // 初始化排程專用的 Choices 下拉多選框
+        const scheduleSelectEl = document.getElementById('tagPoolNameSelect');
+        mainScheduleChoices = new Choices(scheduleSelectEl, {
+            removeItemButton: true, searchEnabled: true, placeholder: true,
+            placeholderValue: "Click to select data points...", itemSelectText: 'Press to select'
+        });
+
+        if (choicesOptions.length > 0) {
+            mainScheduleChoices.setChoices(choicesOptions, 'value', 'label', true);
+        } else {
+            mainScheduleChoices.setChoices([{ value: '', label: 'No tags found in Tag Pool.', disabled: true }], 'value', 'label', true);
+        }
+
+        // 監聽排程類型切換 (日報時間/月報日期)
+        document.getElementById('reportTypeSelect').addEventListener('change', function() {
+            const isDaily = this.value === 'daily';
+            document.getElementById('dailyScheduleContainer').style.display = isDaily ? 'block' : 'none';
+            document.getElementById('monthlyScheduleContainer').style.display = isDaily ? 'none' : 'block';
+        });
+
+        // 載入並初次渲染現有的排程清單
+        savedReportsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ReportParams ?? new List<IControlReporter.Models.Report.ReportParameterModel>()));
+        savedReportsData.forEach(r => r.isEditing = false); 
+        window.renderSavedReports();
+
+        // 監聽排程主儲存按鈕
+        document.getElementById('saveParamsBtn').addEventListener('click', function() {
+            const reportType = document.getElementById('reportTypeSelect').value;
+            const reportTitle = document.getElementById('reportTitleInput').value;
+            const storagePath = document.getElementById('storagePathInput').value.trim();
+            
+            if (!reportTitle.trim()) { alert('Please enter a Report Title!'); return; }
+
+            const selectedNames = mainScheduleChoices.getValue(true);
+            if (selectedNames.length === 0) { alert('Please select at least one Data Point!'); return; }
+            
+            let execTime = '';
+            if (reportType === 'daily') {
+                execTime = document.getElementById('executionTimeDaily').value;
+                if (!execTime) { alert('Please select an Execution Time!'); return; }
+            } else {
+                execTime = document.getElementById('executionTimeMonthly').value;
+                if (!execTime || execTime < 1 || execTime > 31) { alert('Please enter a valid day (1-31)!'); return; }
+            }
+
+            const payload = {
+                ReportType: reportType,
+                ReportTitle: reportTitle,
+                SelectedDataPoints: selectedNames,
+                ExecutionTime: execTime,
+                StoragePath: storagePath,
+                IsEnabled: document.getElementById('isEnabledCheck').checked
+            };
+
+            const btn = this;
+            btn.disabled = true;
+
+            fetch('/Report/SaveReportParam', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) { location.reload(); } 
+                else { alert('儲存失敗：' + data.message); btn.disabled = false; }
+            })
+            .catch(err => { console.error(err); alert('伺服器錯誤'); btn.disabled = false; });
+        });
+
+
+        // ====================================================================
+        // ⚡ 【分頁 B：手動即時產出邏輯】
+        // ====================================================================
+        
+        const manualTypeSelect = document.getElementById('reportType');
+        const dailyPickerWrapper = document.getElementById('dailyPickerWrapper');
+        const monthlyPickerWrapper = document.getElementById('monthlyPickerWrapper');
+        const targetDateInput = document.getElementById('targetDate');
+        const targetMonthInput = document.getElementById('targetMonth');
+        const fileTitleInput = document.getElementById('fileTitleInput'); 
+        const generateBtn = document.getElementById('generateReportBtn');
+        const fileTitleError = document.getElementById('fileTitleError');
+
+        // 初始化日期與月份預設值
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         targetDateInput.value = yesterday.toISOString().split('T')[0];
         targetDateInput.setAttribute('required', 'required');
 
-        // 初始化月份預設值(月報 - 上個月)
         const now = new Date();
         const currentYear = now.getFullYear();
         const currentMonth = String(now.getMonth()).padStart(2, '0');
         targetMonthInput.value = `${currentYear}-${currentMonth === '00' ? '12' : currentMonth}`;
 
-        // 後端來之ViewBag
-        const poolRawData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.TagPool?.TagPool ?? new object[] {}));
-
-        // 2. 初始化 Choices.js 實例
-
-        const choicesInstance = new Choices(tagSelectElement, {
-            removeItemButton: true,
-            searchEnabled: true,
-            placeholder: true,
-            placeholderValue: "Click to select data points...",
-            itemSelectText: 'Press to select'
+        // 初始化手動產出專用的 Choices.js
+        const manualSelectEl = document.getElementById('manualTagPoolSelect');
+        manualChoicesInstance = new Choices(manualSelectEl, {
+            removeItemButton: true, searchEnabled: true, placeholder: true,
+            placeholderValue: "Click to select data points...", itemSelectText: 'Press to select'
         });
 
-        // 3. 將點位池數據轉為 Choices.js 識別的格式 (以對照用的 Name 作為實際 Value)
-        const choicesOptions = poolRawData
-            .filter(tag => tag.Name && tag.Name.trim() !== '')
-            .map(tag => ({
-                value: tag.Name, // 👈 後端對照 GetTagIdsFromPool 需要的名字（如: MVCB）
-                label: tag.Description ? `${tag.Name} (${tag.Description})` : tag.Name
-            }));
-
         if (choicesOptions.length > 0) {
-            choicesInstance.setChoices(choicesOptions, 'value', 'label', true);
+            manualChoicesInstance.setChoices(choicesOptions, 'value', 'label', true);
         } else {
-            choicesInstance.setChoices([{ value: '', label: 'No tags found in Tag Pool.', disabled: true }], 'value', 'label', true);
+            manualChoicesInstance.setChoices([{ value: '', label: 'No tags found in Tag Pool.', disabled: true }], 'value', 'label', true);
         }
 
-        // 監聽報表類型選擇切換時，元件及型態變換
-        reportTypeSelect.addEventListener('change', function() {
+        // 監聽手動表單類型變更
+        manualTypeSelect.addEventListener('change', function() {
             if (this.value === 'daily') {
                 dailyPickerWrapper.style.display = 'block';
                 monthlyPickerWrapper.style.display = 'none';
@@ -225,48 +406,26 @@
             }
         });
 
-        // --- 表單送出非同步要求 ---
+        // 手動生成表單送出 AJAX 請求 (Blob 下載 Excel)
         document.getElementById('manualReportForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            // 從 Choices.js 實例中直接撈取選取的所有點位對照名稱 (Array)
-            const selectedTags = choicesInstance.getValue(true); 
-            const fileHeader = fileTitleInput.value;
-            const type = reportTypeSelect.value;
-            let timeValue = "";
+            const selectedTags = manualChoicesInstance.getValue(true); 
+            const fileHeader = fileTitleInput.value.trim();
+            const type = manualTypeSelect.value;
+            let timeValue = (type === 'daily') ? targetDateInput.value : targetMonthInput.value;
 
-            @* 檢查選取tag數量 *@
-            if (selectedTags.length === 0) {
-                alert('Please select at least one Data Point for the report!');
-                return;
-            }
-
-            @* 檢查檔案抬頭是否為空 *@
-            if (fileHeader === "") 
-            {
+            if (selectedTags.length === 0) { alert('Please select at least one Data Point for the report!'); return; }
+            if (fileHeader === "") {
                 if (fileTitleError) fileTitleError.classList.remove('d-none');
                 fileTitleInput.classList.add('is-invalid');
                 fileTitleInput.focus();
                 return;
-            } 
-            else 
-            {
+            } else {
                 if (fileTitleError) fileTitleError.classList.add('d-none');
                 fileTitleInput.classList.remove('is-invalid');
             }
-            
-            @* 檢查報表類型 *@
-            if (type === 'daily') {
-                timeValue = targetDateInput.value;
-            } else {
-                timeValue = targetMonthInput.value; 
-            }
-            
-            @* 檢查是否有目標時間 *@
-            if (!timeValue) {
-                alert('Please select a valid target date or month!');
-                return;
-            }
+            if (!timeValue) { alert('Please select a valid target date or month!'); return; }
 
             const payload = {
                 FileHeader: fileHeader,
@@ -275,42 +434,28 @@
                 SelectedDataPoints: selectedTags
             };
 
-            console.log("手動報表觸發參數:", payload);
+            const originalHtml = generateBtn.innerHTML;
+            generateBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Calculating...';
+            generateBtn.disabled = true;
 
-            @* 加載動畫 *@
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Calculating...';
-            btn.disabled = true;
-
-            @* 後端串接宣告(POST) *@
             fetch('/Report/GenerateManualReport', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             })
             .then(response => {
                 if (!response.ok) throw new Error("伺服器回應錯誤，無法生成報表。");
-                // ✅ 修正：改用 response.blob() 來接收 Excel 的二進位檔案流，不走 JSON 解析
                 return response.blob(); 
             })
             .then(blob => {
-                // 🚀 大絕招：在記憶體中建立一個指向該 Excel 二進位的下載 URL
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                
-                // 動態決定下載下來的實體副檔名與名稱
                 const filePrefix = type === 'daily' ? 'Daily_Report' : 'Monthly_Report';
-                a.download = `${filePrefix}_${timeValue}.xlsx`; 
-                
-                // 模擬使用者點擊下載連結
+                a.download = `${filePrefix}_${fileHeader}_${timeValue}.xlsx`; 
                 document.body.appendChild(a);
                 a.click(); 
-                
-                // 清理記憶體防滲漏
                 a.remove();
                 window.URL.revokeObjectURL(url);
             })
@@ -319,10 +464,202 @@
                 alert('發生非預期錯誤，報表生成失敗，請檢查資料庫或連線狀態。');
             })
             .finally(() => {
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
+                generateBtn.innerHTML = originalHtml;
+                generateBtn.disabled = false;
             });
         });
-    
+
     });
+
+    // ====================================================================
+    // 🎨 【全域公共方法：渲染排程卡片清單】
+    // ====================================================================
+    window.renderSavedReports = function() {
+        const container = document.getElementById('savedParamsContainer');
+        inlineChoicesInstances.forEach(c => c.destroy());
+        inlineChoicesInstances = [];
+
+        if (savedReportsData.length === 0) {
+            container.innerHTML = '<div class="col-12 text-secondary">No saved configurations yet.</div>';
+            return;
+        }
+
+        container.innerHTML = '';
+        savedReportsData.forEach((report, index) => {
+            if (report.isEditing) {
+                // 🟢 排程卡片：編輯模式
+                let optionsHtml = '';
+                poolRawData.forEach(tag => {
+                    if(tag.Name && tag.Name.trim() !== '') {
+                        const isSelected = report.SelectedDataPoints.includes(tag.Name) ? 'selected' : '';
+                        const label = tag.Description ? `${tag.Name} (${tag.Description})` : tag.Name;
+                        optionsHtml += `<option value="${tag.Name}" ${isSelected}>${label}</option>`;
+                    }
+                });
+
+                container.innerHTML += `
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded-3 h-100 shadow-sm" style="background-color: #fcfaff; border-color: #8D72E1 !important; border-width: 2px;">
+                            <h6 class="fw-bold theme-text mb-3"><i class="bi bi-pencil-square me-2"></i>Edit Configuration</h6>
+                            <div class="mb-2">
+                                <label class="form-label text-secondary small fw-bold mb-1">報表抬頭</label>
+                                <input type="text" class="form-control form-control-sm" id="editTitle_${index}" value="${report.ReportTitle}" readonly style="background-color: #e9ecef !important;" />
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label text-secondary small fw-bold mb-1">存儲路徑</label>
+                                <input type="text" class="form-control form-control-sm" id="editPath_${index}" value="${report.StoragePath ?? ''}" placeholder="e.g., D:\\Reports" />
+                            </div>
+                            <div class="row g-2 mb-2">
+                                <div class="col-6">
+                                    <label class="form-label text-secondary small fw-bold mb-1">報表類型</label>
+                                    <select class="form-select form-select-sm" id="editType_${index}" onchange="toggleInlineSchedule(${index}, this.value)">
+                                        <option value="daily" ${report.ReportType === 'daily' ? 'selected' : ''}>Daily</option>
+                                        <option value="monthly" ${report.ReportType === 'monthly' ? 'selected' : ''}>Monthly</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <div id="editDailyContainer_${index}" style="${report.ReportType === 'daily' ? '' : 'display: none;'}">
+                                        <label class="form-label text-secondary small fw-bold mb-1">執行時間</label>
+                                        <input type="time" class="form-control form-control-sm" id="editTimeDaily_${index}" value="${report.ReportType === 'daily' ? report.ExecutionTime : '08:00'}" />
+                                    </div>
+                                    <div id="editMonthlyContainer_${index}" style="${report.ReportType === 'monthly' ? '' : 'display: none;'}">
+                                        <label class="form-label text-secondary small fw-bold mb-1">執行日期</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" class="form-control form-control-sm" id="editTimeMonthly_${index}" min="1" max="31" value="${report.ReportType === 'monthly' ? report.ExecutionTime : '1'}" />
+                                            <span class="input-group-text bg-white text-secondary">th</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-secondary small fw-bold mb-1">資料點位</label>
+                                <select class="form-select inline-tag-select" id="editTags_${index}" multiple>
+                                    ${optionsHtml}
+                                </select>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top" style="border-color: rgba(141, 114, 225, 0.2) !important;">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="editStatus_${index}" ${report.IsEnabled ? 'checked' : ''}>
+                                    <label class="form-check-label small fw-bold text-secondary" for="editStatus_${index}">啟用</label>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-secondary me-1" onclick="cancelInlineEdit(${index})">關閉</button>
+                                    <button class="btn btn-sm theme-btn" id="btnSaveInline_${index}" onclick="saveInlineEdit(${index})">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 🔵 排程卡片：檢視模式
+                const badges = report.SelectedDataPoints.map(p => 
+                    `<span class="badge rounded-pill shadow-sm" style="background-color: white; color: #6C4AB6; border: 1px solid rgba(141, 114, 225, 0.4);">${p}</span>`
+                ).join('');
+                
+                const typeBadgeColor = report.ReportType === 'daily' ? 'bg-primary' : 'bg-success';
+                const typeText = report.ReportType === 'daily' ? '日報表' : '月報表';
+                const statusBadgeClass = report.IsEnabled ? 'bg-success' : 'bg-secondary';
+                const statusText = report.IsEnabled ? '啟用' : '禁用';
+                const scheduleText = report.ReportType === 'daily' ? `每日 ${report.ExecutionTime}` : `每月 ${report.ExecutionTime} 號執行`;
+                const safeTitle = report.ReportTitle.replace(/'/g, "\\'");
+
+                container.innerHTML += `
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded-3 h-100 shadow-sm position-relative" style="background-color: rgba(255, 255, 255, 0.6); border-color: rgba(141, 114, 225, 0.3) !important;">
+                            <div class="position-absolute top-0 end-0 m-3">
+                                <button class="btn btn-sm btn-outline-primary me-1" onclick="enableInlineEdit(${index})"><i class="bi bi-pencil-square"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteReportConfig('${safeTitle}')"><i class="bi bi-trash"></i></button>
+                            </div>
+                            <h6 class="fw-bold theme-text mb-2 pe-5">${report.ReportTitle} <span class="badge ${typeBadgeColor} ms-2">${typeText}</span></h6>
+                            <div class="d-flex align-items-center mb-1 small">
+                                <span class="badge ${statusBadgeClass} me-2">${statusText}</span>
+                                <span class="text-secondary fw-medium"><i class="bi bi-clock-history me-1"></i>${scheduleText}</span>
+                            </div>
+                            <div class="mb-3 small text-truncate">
+                                <span class="text-secondary fw-medium"><i class="bi bi-folder-fill me-1 theme-text"></i>Path: ${report.StoragePath || 'Default (伺服器預設路徑)'}</span>
+                            </div>
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                ${badges}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+
+        // 重新初始化行內編輯專屬的 Choices 多選元件
+        document.querySelectorAll('.inline-tag-select').forEach(el => {
+            const choice = new Choices(el, { removeItemButton: true, searchEnabled: true, itemSelectText: 'Press to select' });
+            inlineChoicesInstances.push(choice);
+            el._choicesInstance = choice;
+        });
+    };
+
+    window.toggleInlineSchedule = function(index, type) {
+        document.getElementById(`editDailyContainer_${index}`).style.display = type === 'daily' ? 'block' : 'none';
+        document.getElementById(`editMonthlyContainer_${index}`).style.display = type === 'monthly' ? 'block' : 'none';
+    };
+
+    window.enableInlineEdit = function(index) { savedReportsData[index].isEditing = true; window.renderSavedReports(); };
+    window.cancelInlineEdit = function(index) { savedReportsData[index].isEditing = false; window.renderSavedReports(); };
+
+    // 儲存行內編輯結果
+    window.saveInlineEdit = function(index) {
+        const reportTitle = document.getElementById(`editTitle_${index}`).value;
+        const reportType = document.getElementById(`editType_${index}`).value;
+        const storagePath = document.getElementById(`editPath_${index}`).value.trim();
+        const isEnabled = document.getElementById(`editStatus_${index}`).checked;
+        
+        let execTime = '';
+        if (reportType === 'daily') {
+            execTime = document.getElementById(`editTimeDaily_${index}`).value;
+            if (!execTime) { alert('Please select an Execution Time!'); return; }
+        } else {
+            execTime = document.getElementById(`editTimeMonthly_${index}`).value;
+            if (!execTime || execTime < 1 || execTime > 31) { alert('Please enter a valid day (1-31)!'); return; }
+        }
+
+        const selectEl = document.getElementById(`editTags_${index}`);
+        const selectedNames = selectEl._choicesInstance.getValue(true);
+
+        if (selectedNames.length === 0) { alert('Please select at least one Data Point!'); return; }
+
+        const payload = {
+            ReportType: reportType,
+            ReportTitle: reportTitle,
+            SelectedDataPoints: selectedNames,
+            ExecutionTime: execTime,
+            StoragePath: storagePath,
+            IsEnabled: isEnabled
+        };
+
+        const btn = document.getElementById(`btnSaveInline_${index}`);
+        btn.disabled = true;
+
+        fetch('/Report/SaveReportParam', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) { location.reload(); } 
+            else { alert('儲存失敗：' + data.message); btn.disabled = false; }
+        })
+        .catch(err => { console.error(err); alert('伺服器錯誤'); btn.disabled = false; });
+    };
+
+    // 刪除排程配置
+    window.deleteReportConfig = function(title) {
+        if (!confirm(`Are you sure you want to delete the configuration for '${title}'?`)) return;
+
+        fetch('/Report/DeleteReportParam', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ReportTitle: title })
+        })
+        .then(res => res.json())
+        .then(data => { if (data.success) { location.reload(); } else { alert('刪除失敗：' + data.message); } })
+        .catch(err => { console.error(err); alert('伺服器錯誤'); });
+    };
 </script>

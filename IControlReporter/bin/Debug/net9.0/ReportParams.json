@@ -1,22 +1,26 @@
 [
   {
     "ReportType": "daily",
-    "ReportTitle": "日報表",
+    "ReportTitle": "測試",
     "SelectedDataPoints": [
-      "F319_順向有效電能"
+      "F312_有效功率",
+      "F311_T相電流"
     ],
     "IsEnabled": true,
-    "ExecutionTime": "14:00",
+    "ExecutionTime": "09:02",
     "StoragePath": "C:\\\\"
   },
   {
-    "ReportType": "monthly",
-    "ReportTitle": "月報表",
+    "ReportType": "daily",
+    "ReportTitle": "測試2",
     "SelectedDataPoints": [
-      "F319_順向有效電能"
+      "F319_順向有效電能",
+      "F312_有效功率",
+      "F311_有效功率",
+      "F311_T相電流"
     ],
     "IsEnabled": true,
-    "ExecutionTime": "23",
+    "ExecutionTime": "09:00",
     "StoragePath": "C:\\\\"
   }
 ]

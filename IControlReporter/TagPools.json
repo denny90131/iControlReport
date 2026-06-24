@@ -5,6 +5,30 @@
       "Tag_ID": 281,
       "Tag_Name": "ACC_F319_PM_SUPWH_F319___順向有效電能",
       "Description": "F319_順向有效電能"
+    },
+    {
+      "Name": "aa",
+      "Tag_ID": 8,
+      "Tag_Name": "AI_AD5C_2_3__AI模組__Analog 2",
+      "Description": "aa"
+    },
+    {
+      "Name": "N相電流",
+      "Tag_ID": 106,
+      "Tag_Name": "AI_F317_PM_NI_33kV_PowerMeter(PM5350)_F317_N相電流",
+      "Description": "N相電流"
+    },
+    {
+      "Name": "F312_有效功率",
+      "Tag_ID": 38,
+      "Tag_Name": "AI_F312_PM_P_33kV_PowerMeter(PM5350)_F312_有效功率",
+      "Description": "F312_有效功率"
+    },
+    {
+      "Name": "F311_有效功率",
+      "Tag_ID": 23,
+      "Tag_Name": "AI_F311_PM_P_33kV_PowerMeter(PM5350)_F311_有效功率",
+      "Description": "F311_有效功率"
     }
   ]
 }

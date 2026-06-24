@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using IControlReporter.Data;
 using IControlReporter.Services;
 using IControlReporter.Test; // 👈 確保引入測試命名空間
+using Serilog;
+using Serilog.Formatting.Json;
 using Quartz;
 
 
@@ -12,6 +14,24 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         connectionString, 
         ServerVersion.AutoDetect(connectionString)));
+
+
+string exeBinDir = AppDomain.CurrentDomain.BaseDirectory;
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .WriteTo.File(
+        new Serilog.Formatting.Json.JsonFormatter(),
+        Path.Combine(exeBinDir, "Logs", "report_apps.json"), 
+        rollingInterval: RollingInterval.Day,
+        shared: true,
+        // 🎯 關鍵設定：強制每 1 秒鐘將緩衝區資料寫入硬碟
+        flushToDiskInterval: TimeSpan.FromSeconds(1) 
+    )
+    .CreateLogger();
+
+// 2. 掛載至 Host 上
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

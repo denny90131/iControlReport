@@ -28,7 +28,7 @@ public class ChartController : Controller
         return View();
     }
 
-     // --- 處理前端發送的 Ajax POST 請求 ---
+     // --- 處理前端發送的 Ajax POST 請求(加載曲線) ---
     [HttpPost]
     public IActionResult GetChartData([FromBody] ChartQueryModel query)
     {
@@ -96,6 +96,74 @@ public class ChartController : Controller
 
         return Json(result);
     }
+
+    // --- 處理前端發送的 Ajax POST 請求(下載資料) ---
+    [HttpPost]
+    public IActionResult DownloadChartData([FromBody] ChartQueryModel query)
+    {
+        if (query == null || query.TagIds == null || query.TagIds.Count == 0)
+        {
+            return BadRequest("Invalid request data.");
+        }
+
+        // 2. 將前端傳來的字串手動解析為 DateTime 型態（安全防炸）
+        if (!DateTime.TryParse(query.StartTime, out DateTime start) ||
+            !DateTime.TryParse(query.EndTime, out DateTime end))
+        {
+            return BadRequest("時間格式不正確");
+        }
+
+        //💡 3. 如果你的資料庫中的 Id 是數字型態 (例如 int)，先將前端傳來的 string 陣列轉成 int 陣列
+        // (如果你的 Id 原本就是 string/Guid，請略過這行，並在下方把 .Contains(id) 改成 Contains(ae.PointsIdPoint))
+        var tagIdsAsInt = query.TagIds.Select(id => int.Parse(id)).ToList();
+
+        // 💡 4. 真實資料庫查詢與多表 Join
+        var dbData = _context.AnalogEvents
+            // 過濾時間區間與多個 Tag ID (效能核心：先過濾再 Join)
+            .Where(ae => tagIdsAsInt.Contains(ae.PointsIdPoint)
+                      && ae.EventTime >= start
+                      && ae.EventTime <= end)
+            // Join Points 資料表，目的是為了拿到 Tag 的「名稱」(例如：FIC-101)
+            .Join(_context.Points,
+                ae => ae.PointsIdPoint,
+                p => p.IdPoint,
+                (ae, p) => new
+                {
+                    PointId = p.IdPoint,
+                    TagName = p.Tag,
+                    // 假設你的時間欄位叫 Timestamp 或 EventTime，數值欄位叫 Value
+                    Timestamp = ae.EventTime,
+                    Value = ae.Value
+                })
+            .ToList();
+
+
+        var csvBuilder = new System.Text.StringBuilder();
+        
+        // CSV 標題列
+        csvBuilder.AppendLine("Timestamp,TagName,Value");
+
+        // CSV 資料內容
+        foreach (var item in dbData)
+        {
+            // 確保資料包含逗號時不會破壞結構 (簡單處理)
+            var line = $"{item.Timestamp:yyyy-MM-dd HH:mm:ss},{item.TagName},{item.Value}";
+            csvBuilder.AppendLine(line);
+        }
+
+        // 2. 將 StringBuilder 轉為 Byte Array
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csvBuilder.ToString());
+        
+        // 3. 回傳檔案給瀏覽器
+        // "text/csv" 是 MIME type，瀏覽器看到會自動觸發下載
+        var fileName = $"DataExport_{DateTime.Now:yyyyMMddHHmmss}.csv";
+        
+        // 加入 BOM (Byte Order Mark) 讓 Excel 開啟中文時不會亂碼
+        var fileContent = System.Text.Encoding.UTF8.GetPreamble().Concat(bytes).ToArray();
+
+        return File(fileContent, "text/csv", fileName);
+    }
+
 
     // --- 用來承接前端 JSON 的 DTO 模型 ---
     public class ChartQueryModel

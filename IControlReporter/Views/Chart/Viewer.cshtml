@@ -230,13 +230,13 @@
 <div class="container-fluid py-3">
     <div class="card shadow-sm mb-4 border-0 rounded-3">
         <div class="card-body">
-            <h5 class="card-title mb-3 theme-text"><i class="bi bi-funnel-fill me-2"></i>Search Criteria</h5>
+            <h5 class="card-title mb-3 theme-text"><i class="bi bi-funnel-fill me-2"></i>搜尋條件</h5>
             <div class="row g-3 align-items-end">
                 <div class="col-md-3">
-                    <label for="pointSelect" class="form-label fw-bold text-secondary"><i class="bi bi-tag-fill me-2 theme-text"></i>Tag Name</label>
+                    <label for="pointSelect" class="form-label fw-bold text-secondary"><i class="bi bi-tag-fill me-2 theme-text"></i>Tag 名稱</label>
                     <div class="input-group">
                         <select id="pointSelect" class="form-select">
-                            <option value="">-- Select Tag --</option>
+                            <option value="">-- 搜尋點位 --</option>
                             @if (ViewBag.Points != null)
                             {
                                 foreach (var item in ViewBag.Points)
@@ -246,50 +246,54 @@
                             }
                         </select>
                         <button class="btn theme-btn" type="button" id="addTagBtn">
-                            <i class="bi bi-plus-lg"></i> Add
+                            <i class="bi bi-plus-lg"></i> 加入
                         </button>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <label for="startTime" class="form-label fw-bold text-secondary"><i class="bi bi-play-circle-fill me-2 theme-text"></i>Start Time</label>
+                <div class="col-md-2">
+                    <label for="startTime" class="form-label fw-bold text-secondary"><i class="bi bi-play-circle-fill me-2 theme-text"></i>起始時間</label>
                     <input type="text" id="startTime" class="form-control" placeholder="Select Start Time" />
                 </div>
-                <div class="col-md-3">
-                    <label for="endTime" class="form-label fw-bold text-secondary"><i class="bi bi-stop-circle-fill me-2 theme-text"></i>End Time</label>
+                <div class="col-md-2">
+                    <label for="endTime" class="form-label fw-bold text-secondary"><i class="bi bi-stop-circle-fill me-2 theme-text"></i>結束時間</label>
                     <input type="text" id="endTime" class="form-control" placeholder="Select End Time" />
                 </div>
-                <div class="col-md-3">
-                    <button id="searchBtn" class="btn theme-btn w-100">
-                        <i class="bi bi-search me-2"></i>Search
-                    </button>
+                <div class="col-md-5">
+                    <label class="form-label invisible">按鈕區</label> <div class="d-flex gap-2">
+                        <button id="searchBtn" class="btn theme-btn flex-grow-1">
+                            <i class="bi bi-search me-1"></i>執行搜尋
+                        </button>
+                        <button type="button" id="downloadRawData" class="btn btn-outline-secondary flex-grow-1">
+                            <i class="bi bi-save me-1"></i>下載
+                        </button>
+                    </div>
                 </div>
             </div>
-            
             <!-- 已選擇的 Tag 顯示區塊 -->
             <div class="mt-3 d-flex justify-content-between align-items-start w-100">
                 <div id="selectedTagsContainer" class="d-flex flex-wrap gap-2"></div>
                 <!-- 儲存 Tag 群組按鈕 (預設隱藏，有選取時才顯示) -->
                 <button type="button" id="saveTagPoolBtn" class="btn theme-btn-outline btn-sm text-nowrap ms-3" style="display: none;">
-                    <i class="bi bi-save me-1"></i> Save Tags
+                    <i class="bi bi-save me-1"></i> 存儲 Tag
                 </button>
             </div>
 
             <div class="mt-4 d-flex flex-wrap gap-2 align-items-center">
-                <span class="text-secondary fw-bold me-2"><i class="bi bi-clock-history me-1 theme-text"></i>Quick Select:</span>
+                <span class="text-secondary fw-bold me-2"><i class="bi bi-clock-history me-1 theme-text"></i>快捷選取:</span>
                 <button type="button" class="btn theme-btn-outline btn-sm px-3 py-1" onclick="setQuickRange('3d')">
-                    <i class="bi bi-calendar-event me-1"></i>Last 3 Days
+                    <i class="bi bi-calendar-event me-1"></i>近三日
                 </button>
                 <button type="button" class="btn theme-btn-outline btn-sm px-3 py-1" onclick="setQuickRange('1w')">
-                    <i class="bi bi-calendar-week me-1"></i>Last 1 Week
+                    <i class="bi bi-calendar-week me-1"></i>近一周
                 </button>
                 <button type="button" class="btn theme-btn-outline btn-sm px-3 py-1" onclick="setQuickRange('1m')">
-                    <i class="bi bi-calendar-month me-1"></i>Last 1 Month
+                    <i class="bi bi-calendar-month me-1"></i>近一月
                 </button>
                 <button type="button" class="btn theme-btn-outline btn-sm px-3 py-1" onclick="setQuickRange('3m')">
-                    <i class="bi bi-calendar3 me-1"></i>Last 3 Months
+                    <i class="bi bi-calendar3 me-1"></i>近三月
                 </button>
                 <button type="button" class="btn theme-btn-outline btn-sm px-3 py-1" onclick="setQuickRange('1y')">
-                    <i class="bi bi-calendar4-week me-1"></i>Last 1 Year
+                    <i class="bi bi-calendar4-week me-1"></i>近一年
                 </button>
             </div>
         </div>
@@ -297,7 +301,7 @@
 
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body">
-            <h5 class="card-title theme-text"><i class="bi bi-graph-up-arrow me-2"></i>Trend Chart</h5>
+            <h5 class="card-title theme-text"><i class="bi bi-graph-up-arrow me-2"></i>趨勢曲線</h5>
             <div class="position-relative w-100 mt-3" style="height: 500px;">
                 <canvas id="trendChart"></canvas>
             </div>
@@ -452,6 +456,77 @@
         });
     });
 
+        @* 按下按鈕 *@
+    document.getElementById('downloadRawData').addEventListener('click', function() {
+        var startTime = document.getElementById('startTime').value;
+        var endTime = document.getElementById('endTime').value;
+
+        @* 提示字 *@
+        if (selectedTags.length === 0) {
+            alert('Please add at least one Tag!');
+            return;
+        }
+        if (!startTime || !endTime) {
+            alert('Please select valid start and end times!');
+            return;
+        }
+        if (new Date(startTime) >= new Date(endTime)) {
+            alert('End time must be greater than start time!');
+            return;
+        }
+
+        console.log("Search Criteria - Tags:", selectedTags, "Start:", startTime, "End:", endTime);
+
+        // 1. 準備要傳送給 Controller 的資料 (Payload)
+        const requestPayload = {
+            TagIds: selectedTags.map(t => t.id), // 萃取出所有選擇的 Tag ID 變成陣列
+            StartTime: startTime,
+            EndTime: endTime
+        };
+
+        // 讓按鈕呈現 Loading 狀態 (提升使用者體驗)
+        const downloadBtnElement = document.getElementById('downloadRawData');
+        const originalBtnText = downloadBtnElement.innerHTML;
+        downloadBtnElement.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Loading...';
+        downloadBtnElement.disabled = true;
+
+        // 2. 發送 POST 請求到 ChartController 的 GetChartData Action
+        fetch('/Chart/DownloadChartData', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json' // 宣告我們傳送的是 JSON
+            },
+            body: JSON.stringify(requestPayload)
+        })
+        .then(response => {
+        if (!response.ok) throw new Error('下載請求失敗');
+        // 💡 重點：將回應轉換為 Blob (二進位大物件)
+        return response.blob(); 
+        })
+        .then(blob => {
+            // 💡 建立一個下載連結並自動點擊
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            // 設定下載的預設檔名
+            a.download = `ExportedData_${new Date().getTime()}.csv`; 
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url); // 釋放記憶體
+            a.remove();
+        })
+        .catch(error => {
+            console.error('Fetch error:', error);
+            alert('下載檔案時發生錯誤，請確認伺服器連線或稍後再試。');
+        })
+        .finally(() => {
+            downloadBtnElement.innerHTML = originalBtnText;
+            downloadBtnElement.disabled = false;
+        });
+    
+    });
+
     @* 日期快捷 *@
     function setQuickRange(range) {
         const end = new Date();
@@ -521,8 +596,8 @@
             alert('伺服器連線發生錯誤。');
         })
         .finally(() => {
-            btnElement.innerHTML = originalText;
-            btnElement.disabled = false;
+            searchBtnElement.innerHTML = originalText;
+            searchBtnElement.disabled = false;
         });
     });
 

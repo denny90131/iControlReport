@@ -72,14 +72,14 @@
     <!-- 選擇與加入 Tag 的操作區塊 -->
     <div class="card shadow-sm mb-4 border-0 rounded-3">
         <div class="card-body d-flex flex-column gap-3">
-            <h5 class="card-title mb-0 theme-text"><i class="bi bi-collection-fill me-2"></i>Tag Pool Management</h5>
+            <h5 class="card-title mb-0 theme-text"><i class="bi bi-collection-fill me-2"></i>點位池管理</h5>
             
             <div class="row g-3 align-items-end">
                 <!-- 新增 Tag 到清單 -->
                 <div class="col-12 d-flex gap-2 align-items-center">
-                    <label for="pointSelect" class="form-label text-secondary fw-bold mb-0 text-nowrap">Add Tag:</label>
+                    <label for="pointSelect" class="form-label text-secondary fw-bold mb-0 text-nowrap">加入 tag:</label>
                     <select id="pointSelect" class="form-select">
-                        <option value="">-- Choose a Tag --</option>
+                        <option value="">-- 選擇 Tag --</option>
                         @if (ViewBag.Points != null)
                         {
                             foreach (var item in ViewBag.Points)
@@ -89,7 +89,7 @@
                         }
                     </select>
                     <button class="btn theme-btn text-nowrap" id="addTagToPoolBtn">
-                        <i class="bi bi-plus-lg me-1"></i> Add
+                        <i class="bi bi-plus-lg me-1"></i> 加入
                     </button>
                 </div>
             </div>
@@ -104,11 +104,11 @@
                     <thead class="table-light text-secondary">
                         <tr>
                             <th scope="col" width="5%">#</th>
-                            <th scope="col" width="15%">Tag ID</th>
-                            <th scope="col" width="20%">Tag Name</th>
-                            <th scope="col" width="25%">Name <span class="text-danger">*</span></th>
-                            <th scope="col" width="25%">Description <span class="text-danger">*</span></th>
-                            <th scope="col" width="10%" class="text-end">Action</th>
+                            <th scope="col" width="15%">Tag 序號</th>
+                            <th scope="col" width="20%">Tag 名稱</th>
+                            <th scope="col" width="25%">名稱 <span class="text-danger">*</span></th>
+                            <th scope="col" width="25%">描述 <span class="text-danger">*</span></th>
+                            <th scope="col" width="10%" class="text-end">動作</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -120,28 +120,27 @@
             <!-- 存儲按鈕 -->
             <div class="text-end mt-3">
                 <button class="btn theme-btn px-4" id="savePoolBtn">
-                    <i class="bi bi-save me-1"></i> Save Tag Pool
+                    <i class="bi bi-save me-1"></i> 存儲參數池
                 </button>
             </div>
 
-            <!-- 報表生成需求說明區塊 -->
             <div class="alert mt-4 shadow-sm border-0" style="background-color: rgba(141, 114, 225, 0.1); border-left: 5px solid #8D72E1 !important; border-radius: 10px;" role="alert">
                 <div class="d-flex">
                     <i class="bi bi-info-circle-fill fs-4 me-3 theme-text"></i>
                     <div>
-                        <h6 class="fw-bold theme-text mb-2">Report Generation Requirements</h6>
+                        <h6 class="fw-bold theme-text mb-2">點位池管理功能說明</h6>
                         <p class="mb-2 text-secondary" style="font-size: 0.95rem;">
-                            The <strong>Name</strong> fields defined in this form act as mapping references for generating Daily and Monthly reports. 
-                            To successfully generate these reports, ensure that your Tag Pool includes the following designated names:
+                            本頁面主要負責<strong>將系統底層的「硬體 Tag 點位（Tag ID）」與「前端報表所使用的友善名稱（Name）」進行關聯定義</strong>。透過建立此對照池，可將複雜的資料庫代碼轉化為具備商業邏輯、易於識別的標籤。
                         </p>
-                        <div class="d-flex flex-wrap gap-2 mt-2">
-                            <span class="badge rounded-pill shadow-sm" style="background-color: white; color: #6C4AB6; border: 1px solid rgba(141, 114, 225, 0.4);">MVCB</span>
-                            <span class="badge rounded-pill shadow-sm" style="background-color: white; color: #6C4AB6; border: 1px solid rgba(141, 114, 225, 0.4);">VCB1</span>
-                            <span class="badge rounded-pill shadow-sm" style="background-color: white; color: #6C4AB6; border: 1px solid rgba(141, 114, 225, 0.4);">VCB2</span>
-                            <span class="badge rounded-pill shadow-sm" style="background-color: white; color: #6C4AB6; border: 1px solid rgba(141, 114, 225, 0.4);">VCB3</span>
-                            <span class="badge rounded-pill shadow-sm" style="background-color: white; color: #6C4AB6; border: 1px solid rgba(141, 114, 225, 0.4);">VCB4</span>
-                            <span class="badge rounded-pill shadow-sm" style="background-color: white; color: #6C4AB6; border: 1px solid rgba(141, 114, 225, 0.4);">VCB5</span>
-                        </div>
+                        
+                        <h6 class="fw-bold text-secondary mt-3 mb-2" style="font-size: 0.9rem;"><i class="bi bi-dot me-1"></i>操作與應用指南：</h6>
+                        <ul class="text-secondary ps-3 mb-0" style="font-size: 0.9rem; line-height: 1.6;">
+                            <li><strong>點位映射 (Mapping)：</strong> 從上方下拉選單選擇資料庫實體點位後點擊 Add，並在 <strong>Name</strong> 欄位輸入您為該點位自訂的報表欄位名稱（例如：主變壓器、宿舍總電表等）。</li>
+                            <li><strong>報表連動：</strong> 儲存此對照池後，此處定義的 <strong>Name</strong> 將會自動同步至「報表管理中心」，供自動排程與手動生成報表時進行欄位勾選與數據撈取。</li>
+                            <li><strong>動態異動：</strong> 若未來資料庫更換硬體或 Tag ID 異動，只需在此頁面將對應的 Tag ID 重新對齊原有的 Name，即可確保後端報表排程在不修改設定的情況下繼續正常產出。</li>
+                        </ul>
+                        
+                        <span class="text-muted d-block mt-3 small"><i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i> 溫馨提示：請確認列表中所有項目的 Name 與 Description 皆填寫完整，並點擊右下角 <strong>Save Tag Pool</strong> 才會正式生效。</span>
                     </div>
                 </div>
             </div>

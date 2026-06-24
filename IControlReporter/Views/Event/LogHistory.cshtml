@@ -1,0 +1,128 @@
+@model List<IControlReporter.Controllers.EventController.LocalLogModel>
+
+@{
+    ViewData["Title"] = "System Event Logs";
+}
+
+<style>
+    html, body { background-color: #E8D8FA !important; }
+    .theme-text { color: #6C4AB6 !important; }
+    .card { background-color: #E8E1FA !important; border-radius: 30px; }
+    .table-hover tbody tr:hover { background-color: rgba(141, 114, 225, 0.1) !important; }
+    .table th { color: #6C4AB6; font-weight: 600; border-bottom: 2px solid rgba(141, 114, 225, 0.3) !important; }
+    .table td { vertical-align: middle; border-bottom: 1px solid rgba(141, 114, 225, 0.1) !important; }
+    .filter-input { background-color: rgba(255, 255, 255, 0.6) !important; color: #513c8c !important; border: 1px solid rgba(141, 114, 225, 0.3) !important; border-radius: 10px !important; }
+    .filter-input:focus { background-color: #ffffff !important; border-color: #8D72E1 !important; box-shadow: 0 0 0 0.25rem rgba(141, 114, 225, 0.25) !important; }
+    .theme-btn { background-color: #8D72E1 !important; color: white !important; border-radius: 10px; transition: all 0.2s ease-in-out; }
+    .theme-btn:hover { background-color: #6C4AB6 !important; }
+</style>
+
+<div class="container-fluid py-3">
+    <div class="card shadow-sm border-0 rounded-3 max-width-1100 mx-auto" style="max-width: 1100px;">
+        <div class="card-body p-4">
+            
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="theme-text fw-bold mb-0"><i class="bi bi-terminal-split me-2"></i>系統維運日誌</h5>
+                <span class="badge bg-white theme-text border shadow-sm px-3 py-2 small fw-bold">
+                    <i class="bi bi-calendar3 me-1"></i> Today: @DateTime.Now.ToString("yyyy-MM-dd")
+                </span>
+            </div>
+            
+            <p class="text-secondary small mb-3">紀錄預設載入單日最新 1,000 筆。跨日篩選時，系統將自動讀取對應日期的本地實體檔案。</p>
+
+            <form method="get" action="@Url.Action("LogHistory", "Event")" id="filterForm">
+                <div class="p-3 mb-4 rounded-3 shadow-sm border bg-white d-flex flex-wrap align-items-center justify-content-between gap-3" style="border-color: rgba(141, 114, 225, 0.15) !important;">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <label class="form-label text-secondary fw-bold mb-0 text-nowrap"><i class="bi bi-funnel-fill me-1 theme-text"></i>時間篩選：</label>
+                        
+                        <input type="datetime-local" id="logStartTime" name="filterStart" value="@ViewBag.FilterStart" class="form-control form-control-sm filter-input" style="width: 210px;">
+                        <span class="text-secondary fw-bold">～</span>
+                        <input type="datetime-local" id="logEndTime" name="filterEnd" value="@ViewBag.FilterEnd" class="form-control form-control-sm filter-input" style="width: 210px;">
+                        <button type="submit" class="btn btn-sm theme-btn px-3 ms-2">
+                            <i class="bi bi-search me-1"></i> 執行篩選 (自動換檔)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary px-3" id="resetBtn" style="border-radius: 10px;">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> 重設
+                        </button>
+                    </div>
+                    <div class="small text-muted fw-bold">
+                        當前時段共：<span class="theme-text fs-6">@(Model?.Count ?? 0)</span> 筆紀錄
+                    </div>
+                </div>
+            </form>
+
+            @if (ViewBag.ErrorMessage != null)
+            {
+                <div class="alert alert-danger border-0 shadow-sm rounded-3" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> @ViewBag.ErrorMessage
+                </div>
+            }
+
+            <div class="table-responsive rounded-3 bg-white p-2 shadow-sm border" style="max-height: 650px; overflow-y: auto;">
+                <table class="table table-hover align-middle mb-0" id="logTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="20%">時間</th>
+                            <th width="12%">層級</th>
+                            <th width="68%">日誌內容</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model == null || !Model.Any())
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-5">
+                                    <i class="bi bi-cloud-slash fs-2 d-block mb-2 text-secondary"></i>
+                                    目前時段內無任何符合條件的日誌紀錄。
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var log in Model)
+                            {
+                                string badgeClass = log.Level.Equals("Warning", StringComparison.OrdinalIgnoreCase) ? "bg-warning text-dark" :
+                                                    log.Level.Equals("Error", StringComparison.OrdinalIgnoreCase) || log.Level.Equals("Fatal", StringComparison.OrdinalIgnoreCase) ? "bg-danger" : "bg-info text-dark";
+
+                                <tr>
+                                    <td class="small text-secondary fw-bold" style="font-family: monospace;">@log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                    <td><span class="badge @badgeClass px-2.5 py-1.5 shadow-sm fw-bold">@log.Level</span></td>
+                                    <td class="fw-medium text-dark" style="font-family: Consolas, monospace; font-size: 0.92rem; word-break: break-all;">@log.MessageTemplate</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const startInput = document.getElementById("logStartTime");
+        const endInput = document.getElementById("logEndTime");
+        const resetBtn = document.getElementById("resetBtn");
+
+        const formatDateTime = (date) => {
+            const pad = (num) => String(num).padStart(2, '0');
+            return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        };
+
+        // 🎯【一鍵防呆】：只有在「第一次點進來、完全沒有任何篩選條件」時，才主動去填預設值（一小時前到現在）
+        if (!startInput.value && !endInput.value) {
+            const now = new Date();
+            const oneHourEarlier = new Date(now.getTime() - (60 * 60 * 1000));
+            startInput.value = formatDateTime(oneHourEarlier);
+            endInput.value = formatDateTime(now);
+            
+            // 自動幫他送出第一次預設查詢
+            document.getElementById("filterForm").submit();
+        }
+
+        resetBtn.addEventListener("click", function () {
+            // 直接導向回乾淨的初始頁面，觸發最原始的今日初始化
+            window.location.href = '@Url.Action("LogHistory", "Event")';
+        });
+    });
+</script>

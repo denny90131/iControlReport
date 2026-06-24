@@ -41,7 +41,8 @@ namespace IControlReporter.Services
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
-            _tagPoolFilePath = Path.Combine(env.ContentRootPath, "TagPools.json");
+            string exeBinDir = AppDomain.CurrentDomain.BaseDirectory;
+            _tagPoolFilePath = Path.Combine(exeBinDir, "TagPools.json");
         }
 
         public List<int> GetTagIdsFromPool(List<string> selectedNames)
@@ -131,9 +132,7 @@ namespace IControlReporter.Services
 
             if (!rawData.Any())
             {
-                _logger.LogInformation("=================================================================================");
-                _logger.LogInformation($"⚠️ [驗證警告] 傳入的原始資料庫數據為空 (rawData count = 0)，無法進行計算。");
-                _logger.LogInformation("=================================================================================");
+                _logger.LogWarning($"⚠️ [驗證警告] 傳入的原始資料庫數據為空 (rawData count = 0)，無法進行計算。");
                 return results; 
             }
 
@@ -145,12 +144,8 @@ namespace IControlReporter.Services
                 int pointId = pointGroup.Key;
                 var orderedData = pointGroup.OrderBy(x => x.EventTime).ToList();
 
-                // 🚀 【Console 驗證：點位計算開始】
-                _logger.LogInformation("\n====================================================================================================================");
                 _logger.LogInformation($"📊 [報表數據驗證核心] 開始計算點位 ID: {pointId} | 本次總原始筆數: {orderedData.Count} 筆");
-                _logger.LogInformation("--------------------------------------------------------------------------------------------------------------------");
                 _logger.LogInformation($"{"時間軸 (Hour)",-18} | {"狀態",-4} | {"每小時第一筆 (First)",-20} | {"每小時最後一筆 (Last)",-20} | {"翻轉補償",-4} | {"計算結果 (DiffValue)",-15}");
-                _logger.LogInformation("--------------------------------------------------------------------------------------------------------------------");
 
                 // 💡 先把這點位「每個小時的第一筆資料」撈出來，做成以整點為 Key 的 Dictionary
                 var firstRecordOfEachHour = orderedData
@@ -216,7 +211,6 @@ namespace IControlReporter.Services
                         DiffValue = diffValue
                     });
                 }
-                _logger.LogInformation("====================================================================================================================");
             }
 
             return results.OrderBy(r => r.PointsIdPoint).ThenBy(r => r.TargetTime).ToList();
